@@ -85,9 +85,19 @@ function mapRowToRecipeFromDb(row: RecipeRow): Recipe {
 }
 
 export async function getRecipes(): Promise<Recipe[]> {
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return [];
+  }
+
   const { data, error } = await supabase
     .from('recipes')
     .select('*')
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
   if (error) {
