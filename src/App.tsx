@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { NavigationTab, Currency, Recipe, BreweryProfile, NotificationItem } from './types';
 import { INITIAL_RECIPES, INITIAL_PROFILE, INITIAL_NOTIFICATIONS, DEFAULT_BLANK_RECIPE } from './data/mockData';
 import { createRecipe, deleteRecipe, getRecipes, recipeExists, updateRecipe } from './services/recipeService';
+import { useAuth } from './contexts/AuthContext';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { DashboardView } from './components/DashboardView';
@@ -10,22 +11,35 @@ import { HistoryView } from './components/HistoryView';
 import { RecipesView } from './components/RecipesView';
 import { ConfigView } from './components/ConfigView';
 import { HelpView } from './components/HelpView';
+import { LoginView } from './components/LoginView';
 import { NewBatchModal } from './components/modals/NewBatchModal';
 import { NewRecipeModal } from './components/modals/NewRecipeModal';
-import { LayoutDashboard, LineChart, BookOpen, History, Settings, HelpCircle, Plus, X } from 'lucide-react';
+import { LayoutDashboard, LineChart, BookOpen, History, Settings, HelpCircle, Plus, X, Loader2 } from 'lucide-react';
+
+function profileFromAuthUser(user: NonNullable<ReturnType<typeof useAuth>['user']>): Partial<BreweryProfile> {
+  const metadata = user.user_metadata as Record<string, string | undefined>;
+  return {
+    email: user.email ?? '',
+    name: metadata.brewery_name ?? '',
+    masterBrewer: metadata.master_brewer ?? '',
+  };
+}
 
 export default function App() {
+  const { user, loading, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
   const [currency, setCurrency] = useState<Currency>('CLP');
   const [recipes, setRecipes] = useState<Recipe[]>([]);
 
   useEffect(() => {
+    if (!user) return;
+
     getRecipes()
       .then(setRecipes)
       .catch((error) => {
         console.error('Error al cargar recetas desde Supabase:', error);
       });
-  }, []);
+  }, [user]);
 
   // Active context recipes
   const [currentDashboardRecipe, setCurrentDashboardRecipe] = useState<Recipe | null>(INITIAL_RECIPES[0] || null);
@@ -47,6 +61,15 @@ export default function App() {
   // Profile & System
   const [profile, setProfile] = useState<BreweryProfile>(INITIAL_PROFILE);
   const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
+
+  useEffect(() => {
+    if (!user) return;
+
+    setProfile((prev) => ({
+      ...prev,
+      ...profileFromAuthUser(user),
+    }));
+  }, [user]);
 
   // Modals & Mobile Drawer
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -146,6 +169,26 @@ export default function App() {
   const markNotificationRead = (id: string) => {
     setNotifications(notifications.map((n) => (n.id === id ? { ...n, read: true } : n)));
   };
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0f1c2c] flex flex-col items-center justify-center gap-3 text-white">
+        <Loader2 className="w-8 h-8 animate-spin text-[#ffc641]" />
+        <p className="text-sm font-semibold text-slate-300">Verificando sesión...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginView />;
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#F8F9FA] text-[#031d34] antialiased">
@@ -297,6 +340,7 @@ export default function App() {
               onUpdateProfile={setProfile}
               currency={currency}
               onCurrencyChange={setCurrency}
+              onSignOut={handleSignOut}
             />
           )}
 

@@ -1,12 +1,13 @@
 import React from 'react';
 import { BreweryProfile, Currency } from '../types';
-import { Settings, Save, Shield, Database, RefreshCw, Beer } from 'lucide-react';
+import { Save, Database, Beer, LogOut } from 'lucide-react';
 
 interface ConfigViewProps {
   profile: BreweryProfile;
   onUpdateProfile: (p: BreweryProfile) => void;
   currency: Currency;
   onCurrencyChange: (c: Currency) => void;
+  onSignOut: () => void;
 }
 
 export const ConfigView: React.FC<ConfigViewProps> = ({
@@ -14,6 +15,7 @@ export const ConfigView: React.FC<ConfigViewProps> = ({
   onUpdateProfile,
   currency,
   onCurrencyChange,
+  onSignOut,
 }) => {
   const [toast, setToast] = React.useState(false);
 
@@ -134,10 +136,18 @@ export const ConfigView: React.FC<ConfigViewProps> = ({
           </div>
         </section>
 
-        <div className="flex justify-end gap-3 pt-2">
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-2">
+          <button
+            type="button"
+            onClick={onSignOut}
+            className="border border-red-200 text-red-700 hover:bg-red-50 active:scale-95 transition-all px-6 py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <LogOut className="w-4 h-4" />
+            Cerrar sesión
+          </button>
           <button
             type="submit"
-            className="bg-[#0D1B2A] text-white hover:bg-[#1b324a] active:scale-95 transition-all px-8 py-3.5 rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg cursor-pointer"
+            className="bg-[#0D1B2A] text-white hover:bg-[#1b324a] active:scale-95 transition-all px-8 py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg cursor-pointer"
           >
             <Save className="w-4 h-4 text-[#ffc641]" />
             Guardar Parámetros

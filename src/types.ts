@@ -70,6 +70,16 @@ export interface BreweryProfile {
   inventoryAutoSync: boolean;
 }
 
+/** Fila de public.profiles (1:1 con auth.users). */
+export interface UserProfile {
+  id: string;
+  brewery_name: string | null;
+  master_brewer: string | null;
+  role: string;
+  active: boolean;
+  created_at: string;
+}
+
 export interface NotificationItem {
   id: string;
   title: string;

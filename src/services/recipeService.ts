@@ -8,6 +8,7 @@ import { IndirectCosts, IngredientItem, Recipe } from '../types';
  */
 interface RecipeRow {
   id: string;
+  user_id?: string | null;
   nombre: string;
   estilo: string;
   litros: number;
@@ -34,6 +35,7 @@ interface RecipeRow {
  * | abv               | abv           |                                |
  * | ibu               | ibu           |                                |
  * | id                | id            | Generado por la BD (UUID)      |
+ * | —                 | user_id       | UUID del usuario autenticado     |
  * | lastModified      | created_at    | Solo lectura al insertar       |
  * | code              | —             | Sin columna                    |
  * | status            | —             | Sin columna                    |
@@ -96,7 +98,19 @@ export async function getRecipes(): Promise<Recipe[]> {
 }
 
 export async function createRecipe(recipe: Recipe): Promise<Recipe> {
-  const row = mapRecipeToRow(recipe);
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    throw new Error('No hay un usuario autenticado para crear la receta.');
+  }
+
+  const row = {
+    ...mapRecipeToRow(recipe),
+    user_id: user.id,
+  };
 
   const { data, error } = await supabase
     .from('recipes')
