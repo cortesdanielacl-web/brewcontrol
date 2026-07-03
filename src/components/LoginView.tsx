@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { FlaskConical, Lock, Mail, User, ArrowRight, ShieldCheck, Loader2 } from 'lucide-react';
+import { Lock, Mail, User, ArrowRight, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { BrandLogo } from './BrandLogo';
+import { BRAND_BACKGROUND } from '../constants/branding';
 
 export const LoginView: React.FC = () => {
   const { signIn, signUp } = useAuth();
@@ -61,42 +63,36 @@ export const LoginView: React.FC = () => {
     }
   };
 
+  const trustMessages = [
+    'Tus recetas permanecen privadas.',
+    'Motor financiero consistente.',
+    'Diseñado para cervecerías artesanales.',
+  ];
+
   return (
-    <div className="min-h-screen bg-[#0f1c2c] flex flex-col justify-center items-center p-4 md:p-6 relative overflow-hidden select-none">
+    <div
+      className="min-h-screen flex flex-col relative overflow-hidden select-none"
+      style={{ backgroundColor: BRAND_BACKGROUND }}
+    >
       {/* Background ambient light */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-[400px] h-[400px] bg-bc-yellow/10 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Brand Header */}
-      <div className="flex flex-col items-center mb-8 z-10 animate-in fade-in slide-in-from-bottom-4 duration-300">
-        <div className="w-16 h-16 bg-[#ffc641] rounded-2xl flex items-center justify-center shadow-lg shadow-amber-500/20 mb-4 rotate-3 hover:rotate-0 transition-transform duration-300">
-          <FlaskConical className="w-9 h-9 text-[#0f1c2c]" />
+      <div className="flex-1 flex flex-col justify-center items-center p-4 md:p-6">
+        {/* Brand Header */}
+        <div className="flex flex-col items-center mb-8 md:mb-10 z-10 animate-in fade-in slide-in-from-bottom-4 duration-300 text-center px-4">
+          <BrandLogo
+            variant="horizontal"
+            theme="dark"
+            className="h-[86px] md:h-[101px] w-auto max-w-[min(100%,468px)]"
+          />
         </div>
-        <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight">
-          BrewControl
-        </h1>
-        <p className="text-slate-400 text-sm mt-1 font-medium">
-          Sistema de Costeo y Gestión de Cervecería Artesanal
-        </p>
-      </div>
 
-      {/* Login / Register Card */}
-      <div className="w-full max-w-md bg-white rounded-3xl p-6 md:p-8 shadow-2xl border border-slate-100 z-10 animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
-          <h2 className="text-xl font-bold text-[#0f1c2c]">
+        {/* Login / Register Card */}
+        <div className="w-full max-w-[560px] bg-white bc-card rounded-3xl p-8 md:p-10 z-10 animate-in fade-in zoom-in-95 duration-200">
+          <h2 className="text-xl font-bold text-[#0D1B2A] mb-8">
             {isRegistering ? 'Crear Cuenta' : 'Iniciar Sesión'}
           </h2>
-          <button
-            type="button"
-            onClick={() => {
-              setIsRegistering(!isRegistering);
-              resetMessages();
-            }}
-            className="text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors cursor-pointer"
-          >
-            {isRegistering ? 'Ya tengo cuenta' : 'Registrar nueva cervecería'}
-          </button>
-        </div>
 
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-xl flex items-center gap-2">
@@ -110,7 +106,7 @@ export const LoginView: React.FC = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           {isRegistering && (
             <>
               <div>
@@ -124,7 +120,7 @@ export const LoginView: React.FC = () => {
                     value={breweryName}
                     onChange={(e) => setBreweryName(e.target.value)}
                     placeholder="Ej. Cervecería Valdiviana"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 font-medium outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                    className="w-full bc-input pl-10 pr-4 py-3 text-sm text-slate-900 font-medium outline-none focus:border-bc-action focus:bg-white transition-colors"
                   />
                 </div>
               </div>
@@ -140,7 +136,7 @@ export const LoginView: React.FC = () => {
                     value={masterBrewer}
                     onChange={(e) => setMasterBrewer(e.target.value)}
                     placeholder="Ej. Daniela Cortés"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 font-medium outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                    className="w-full bc-input pl-10 pr-4 py-3 text-sm text-slate-900 font-medium outline-none focus:border-bc-action focus:bg-white transition-colors"
                   />
                 </div>
               </div>
@@ -159,7 +155,7 @@ export const LoginView: React.FC = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="usuario@cerveceria.cl"
                 autoComplete="email"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 font-medium outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                className="w-full bc-input pl-10 pr-4 py-3 text-sm text-slate-900 font-medium outline-none focus:border-bc-action focus:bg-white transition-colors"
               />
             </div>
           </div>
@@ -176,36 +172,74 @@ export const LoginView: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 autoComplete={isRegistering ? 'new-password' : 'current-password'}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 font-medium outline-none focus:border-amber-500 focus:bg-white transition-colors"
+                className="w-full bc-input pl-10 pr-4 py-3 text-sm text-slate-900 font-medium outline-none focus:border-bc-action focus:bg-white transition-colors"
               />
             </div>
           </div>
 
+          {!isRegistering && (
+            <div className="flex justify-end -mb-1">
+              <button
+                type="button"
+                className="text-[11px] font-medium text-slate-400 hover:text-slate-500 transition-colors duration-200 cursor-pointer"
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-[#0f1c2c] hover:bg-[#1b324a] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 mt-2 shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer"
+            className="w-full bc-btn-primary disabled:cursor-not-allowed font-bold py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2 mt-2 bc-shadow hover:-translate-y-px transition-all duration-200 ease-out active:scale-[0.98] active:translate-y-0 cursor-pointer"
           >
             {submitting ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin text-[#ffc641]" />
+                <Loader2 className="w-4 h-4 animate-spin text-[#F5A623]" />
                 <span>Procesando...</span>
               </>
             ) : (
               <>
                 <span>{isRegistering ? 'Registrarse y Entrar' : 'Ingresar'}</span>
-                <ArrowRight className="w-4 h-4 text-[#ffc641]" />
+                <ArrowRight className="w-4 h-4 text-[#F5A623]" />
               </>
             )}
           </button>
+
+          <div className="text-center pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setIsRegistering(!isRegistering);
+                resetMessages();
+              }}
+              className="text-xs font-medium text-slate-400 hover:text-slate-500 transition-colors duration-200 cursor-pointer"
+            >
+              {isRegistering ? 'Ya tengo cuenta' : 'Crear cuenta'}
+            </button>
+          </div>
         </form>
+
+        <div className="mt-8 pt-6 border-t bc-divider flex flex-col gap-2.5">
+          {trustMessages.map((message) => (
+            <p
+              key={message}
+              className="text-[11px] text-slate-400 flex items-center gap-2"
+            >
+              <span className="text-emerald-500/70 shrink-0" aria-hidden="true">
+                ✓
+              </span>
+              {message}
+            </p>
+          ))}
+        </div>
+      </div>
       </div>
 
-      {/* Footer Info */}
-      <div className="mt-8 text-center text-xs text-slate-500 flex items-center gap-1.5 z-10">
-        <ShieldCheck className="w-4 h-4 text-slate-400" />
-        <span>Tu sesión se mantiene de forma segura con Supabase Auth.</span>
-      </div>
+      <footer className="relative z-10 pb-5 pt-2 text-center text-[10px] text-slate-600/70 tracking-wide">
+        <p>Versión 1.0</p>
+        <p className="mt-0.5">© BrewControl</p>
+      </footer>
     </div>
   );
 };

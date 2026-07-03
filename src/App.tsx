@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { NavigationTab, Currency, Recipe, BreweryProfile, NotificationItem } from './types';
-import { INITIAL_RECIPES, INITIAL_PROFILE, INITIAL_NOTIFICATIONS, DEFAULT_BLANK_RECIPE } from './data/mockData';
-import { createRecipe, deleteRecipe, getRecipes, recipeExists, updateRecipe } from './services/recipeService';
+import { INITIAL_PROFILE, INITIAL_NOTIFICATIONS, DEFAULT_BLANK_RECIPE } from './data/mockData';
+import { createRecipe, deleteRecipe, getRecipes, isPersistedRecipeId, updateRecipe } from './services/recipeService';
+import { getProfileByUserId, updateProfile } from './services/profileService';
 import { useAuth } from './contexts/AuthContext';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
@@ -11,10 +12,27 @@ import { HistoryView } from './components/HistoryView';
 import { RecipesView } from './components/RecipesView';
 import { ConfigView } from './components/ConfigView';
 import { HelpView } from './components/HelpView';
+import { AdminView } from './components/AdminView';
 import { LoginView } from './components/LoginView';
 import { NewBatchModal } from './components/modals/NewBatchModal';
 import { NewRecipeModal } from './components/modals/NewRecipeModal';
-import { LayoutDashboard, LineChart, BookOpen, History, Settings, HelpCircle, Plus, X, Loader2 } from 'lucide-react';
+import { LayoutDashboard, LineChart, BookOpen, History, Settings, HelpCircle, Plus, X, Loader2, Shield } from 'lucide-react';
+import { BrandLogo } from './components/BrandLogo';
+import { BRAND_BACKGROUND } from './constants/branding';
+
+function pickLatestRecipe(recipeList: Recipe[]): Recipe | null {
+  if (recipeList.length === 0) return null;
+  return [...recipeList].sort((a, b) => {
+    const aMs = Date.parse(a.lastModified);
+    const bMs = Date.parse(b.lastModified);
+    const aValid = !Number.isNaN(aMs);
+    const bValid = !Number.isNaN(bMs);
+    if (aValid && bValid) return bMs - aMs;
+    if (bValid) return 1;
+    if (aValid) return -1;
+    return 0;
+  })[0];
+}
 
 function profileFromAuthUser(user: NonNullable<ReturnType<typeof useAuth>['user']>): Partial<BreweryProfile> {
   const metadata = user.user_metadata as Record<string, string | undefined>;
@@ -26,7 +44,7 @@ function profileFromAuthUser(user: NonNullable<ReturnType<typeof useAuth>['user'
 }
 
 export default function App() {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signOut, isAdmin, profile: authProfile } = useAuth();
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
   const [currency, setCurrency] = useState<Currency>('CLP');
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -42,7 +60,19 @@ export default function App() {
   }, [user]);
 
   // Active context recipes
-  const [currentDashboardRecipe, setCurrentDashboardRecipe] = useState<Recipe | null>(INITIAL_RECIPES[0] || null);
+  const [currentDashboardRecipe, setCurrentDashboardRecipe] = useState<Recipe | null>(null);
+
+  useEffect(() => {
+    setCurrentDashboardRecipe((prev) => {
+      if (recipes.length === 0) return null;
+      if (prev) {
+        const updated = recipes.find((r) => r.id === prev.id);
+        if (updated) return updated;
+      }
+      return pickLatestRecipe(recipes);
+    });
+  }, [recipes]);
+
   const [currentCostingRecipe, setCurrentCostingRecipe] = useState<Recipe>(() => ({
     ...DEFAULT_BLANK_RECIPE,
     ingredients: [...DEFAULT_BLANK_RECIPE.ingredients],
@@ -55,6 +85,7 @@ export default function App() {
   const openRecipeInCostingEditor = (recipe: Recipe) => {
     const recipeFromCatalog = recipes.find((r) => r.id === recipe.id);
     setCurrentCostingRecipe(recipeFromCatalog ?? recipe);
+    setCostingSessionKey((k) => k + 1);
     setActiveTab('costeo');
   };
 
@@ -67,15 +98,42 @@ export default function App() {
 
     setProfile((prev) => ({
       ...prev,
-      ...profileFromAuthUser(user),
+      email: user.email ?? prev.email,
+      name: authProfile?.brewery_name ?? profileFromAuthUser(user).name ?? prev.name,
+      masterBrewer: authProfile?.master_brewer ?? profileFromAuthUser(user).masterBrewer ?? prev.masterBrewer,
     }));
-  }, [user]);
+  }, [user, authProfile]);
+
+  useEffect(() => {
+    if (!user || activeTab !== 'configuracion') return;
+
+    getProfileByUserId(user.id)
+      .then(({ profile: fetchedProfile, error }) => {
+        if (error) {
+          console.error('Error al cargar la configuración desde Supabase:', error);
+          return;
+        }
+
+        if (!fetchedProfile) return;
+
+        setProfile((prev) => ({
+          ...prev,
+          name: fetchedProfile.brewery_name ?? prev.name,
+          masterBrewer: fetchedProfile.master_brewer ?? prev.masterBrewer,
+          email: user.email ?? prev.email,
+        }));
+      })
+      .catch((error) => {
+        console.error('Error al cargar la configuración desde Supabase:', error);
+      });
+  }, [user, activeTab]);
 
   // Modals & Mobile Drawer
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [newBatchModalOpen, setNewBatchModalOpen] = useState(false);
   const [newRecipeModalOpen, setNewRecipeModalOpen] = useState(false);
   const [exportToast, setExportToast] = useState(false);
+  const [costingSessionKey, setCostingSessionKey] = useState(0);
 
   // Actions
   const handleStartNewBatch = (newBatch: Recipe) => {
@@ -100,30 +158,34 @@ export default function App() {
   const handleCreateNewRecipe = (newRecipe: Recipe) => {
     setRecipes([newRecipe, ...recipes]);
     setCurrentCostingRecipe(newRecipe);
+    setCostingSessionKey((k) => k + 1);
     setActiveTab('costeo');
   };
 
-  const handleSaveCostingRecipe = async (savedRecipe: Recipe) => {
-    let recipeToStore = savedRecipe;
-
+  const handleSaveCostingRecipe = async (savedRecipe: Recipe): Promise<string | null> => {
     try {
-      recipeToStore = (await recipeExists(savedRecipe.id))
+      const recipeToStore = isPersistedRecipeId(String(savedRecipe.id))
         ? await updateRecipe(savedRecipe)
         : await createRecipe(savedRecipe);
+
       setCurrentCostingRecipe(recipeToStore);
+      setRecipes((prev) => {
+        const exists = prev.some((r) => r.id === savedRecipe.id);
+        if (exists) {
+          return prev.map((r) => (r.id === savedRecipe.id ? recipeToStore : r));
+        }
+        return [recipeToStore, ...prev];
+      });
+      setCurrentDashboardRecipe((prev) =>
+        !prev || prev.id === savedRecipe.id ? recipeToStore : prev,
+      );
+
+      return null;
     } catch (error) {
       console.error('Error al guardar la receta en Supabase:', error);
-    }
-
-    const exists = recipes.some((r) => r.id === savedRecipe.id);
-    if (exists) {
-      setRecipes(recipes.map((r) => (r.id === savedRecipe.id ? recipeToStore : r)));
-    } else {
-      setRecipes([recipeToStore, ...recipes]);
-    }
-
-    if (!currentDashboardRecipe || currentDashboardRecipe.id === savedRecipe.id) {
-      setCurrentDashboardRecipe(recipeToStore);
+      return error instanceof Error
+        ? error.message
+        : 'No se pudo guardar la receta. Intenta nuevamente.';
     }
   };
 
@@ -138,6 +200,7 @@ export default function App() {
     };
     setRecipes([copy, ...recipes]);
     setCurrentCostingRecipe(copy);
+    setCostingSessionKey((k) => k + 1);
     setActiveTab('costeo');
   };
 
@@ -177,10 +240,32 @@ export default function App() {
     }
   };
 
+  const handleSaveProfile = async (): Promise<string | null> => {
+    if (!user) {
+      return 'No hay una sesión activa. Inicia sesión e intenta nuevamente.';
+    }
+
+    const { error } = await updateProfile(user.id, {
+      breweryName: profile.name,
+      masterBrewer: profile.masterBrewer,
+    });
+
+    if (error) {
+      console.error('Error al guardar la configuración en Supabase:', error);
+      return 'No se pudo guardar la configuración. Intenta nuevamente.';
+    }
+
+    return null;
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0f1c2c] flex flex-col items-center justify-center gap-3 text-white">
-        <Loader2 className="w-8 h-8 animate-spin text-[#ffc641]" />
+      <div
+        className="min-h-screen flex flex-col items-center justify-center gap-4 text-white"
+        style={{ backgroundColor: BRAND_BACKGROUND }}
+      >
+        <BrandLogo variant="icon" theme="dark" className="h-20 w-auto" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#F5A623]" />
         <p className="text-sm font-semibold text-slate-300">Verificando sesión...</p>
       </div>
     );
@@ -191,7 +276,7 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#F8F9FA] text-[#031d34] antialiased">
+    <div className="flex h-screen overflow-hidden bg-[#F8FAFC] text-[#0D1B2A] antialiased">
       {/* Desktop Sidebar */}
       <Sidebar
         activeTab={activeTab}
@@ -204,10 +289,10 @@ export default function App() {
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 md:hidden flex animate-in fade-in duration-200">
           <div className="fixed inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setMobileMenuOpen(false)} />
-          <div className="relative bg-[#0f1c2c] text-white w-[280px] h-full shadow-2xl p-6 flex flex-col justify-between z-10 animate-in slide-in-from-left duration-200 select-none">
+          <div className="relative bc-sidebar text-white w-[280px] h-full bc-shadow p-6 flex flex-col justify-between z-10 animate-in slide-in-from-left duration-200 select-none">
             <div>
               <div className="flex items-center justify-between mb-8">
-                <span className="text-2xl font-black text-white">BrewControl</span>
+                <BrandLogo variant="short" theme="dark" className="shrink-0" />
                 <button onClick={() => setMobileMenuOpen(false)} className="p-1 text-slate-300 hover:text-white">
                   <X className="w-6 h-6" />
                 </button>
@@ -218,7 +303,7 @@ export default function App() {
                   setMobileMenuOpen(false);
                   setNewBatchModalOpen(true);
                 }}
-                className="w-full bg-[#ffc641] text-[#715300] font-bold py-3 px-4 rounded-xl mb-6 flex items-center justify-center gap-2 shadow-sm"
+                className="w-full bg-[#F5A623] text-[#0D1B2A] font-bold py-3 px-4 rounded-xl mb-6 flex items-center justify-center gap-2 bc-shadow"
               >
                 <Plus className="w-5 h-5 stroke-[3]" />
                 Nuevo Lote
@@ -227,9 +312,12 @@ export default function App() {
               <nav className="flex flex-col gap-2">
                 {[
                   { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
-                  { id: 'costeo', label: 'Nuevo Costeo', icon: <LineChart className="w-5 h-5" /> },
+                  { id: 'costeo', label: 'Nueva Evaluación de Receta', icon: <LineChart className="w-5 h-5" /> },
                   { id: 'recetas', label: 'Mis Recetas', icon: <BookOpen className="w-5 h-5" /> },
                   { id: 'historial', label: 'Historial', icon: <History className="w-5 h-5" /> },
+                  ...(isAdmin
+                    ? [{ id: 'administracion', label: 'Administración', icon: <Shield className="w-5 h-5" /> }]
+                    : []),
                   { id: 'configuracion', label: 'Configuración', icon: <Settings className="w-5 h-5" /> },
                 ].map((item) => (
                   <button
@@ -239,7 +327,7 @@ export default function App() {
                       setMobileMenuOpen(false);
                     }}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-colors text-left ${
-                      activeTab === item.id ? 'bg-white/15 text-[#ffc641]' : 'text-[#bac8dc] hover:bg-white/10'
+                      activeTab === item.id ? 'bg-white/15 text-[#F5A623]' : 'text-[rgba(255,255,255,0.55)] hover:bg-white/10'
                     }`}
                   >
                     {item.icon}
@@ -255,7 +343,7 @@ export default function App() {
                   setActiveTab('ayuda');
                   setMobileMenuOpen(false);
                 }}
-                className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-[#bac8dc] hover:text-white w-full text-left"
+                className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-[rgba(255,255,255,0.55)] hover:text-white w-full text-left"
               >
                 <HelpCircle className="w-5 h-5" />
                 <span>Ayuda y Fórmulas</span>
@@ -276,18 +364,19 @@ export default function App() {
           onMobileMenuToggle={() => setMobileMenuOpen(true)}
           notifications={notifications}
           onMarkNotificationRead={markNotificationRead}
+          onSignOut={handleSignOut}
         />
 
         {/* Simulated Export Toast */}
         {exportToast && (
-          <div className="fixed top-20 right-8 bg-[#0D1B2A] text-white px-5 py-3 rounded-xl shadow-2xl border border-[#ffc641] flex items-center gap-3 z-50 animate-in slide-in-from-top-4">
+          <div className="fixed top-20 right-8 bg-[#0D1B2A] text-white px-5 py-3 rounded-2xl bc-shadow border border-[#F5A623] flex items-center gap-3 z-50 animate-in slide-in-from-top-4">
             <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping" />
             <span className="text-xs font-bold">Generando archivo de exportación CSV/Excel...</span>
           </div>
         )}
 
         {/* Canvas Body */}
-        <main className="flex-1 overflow-y-auto bg-[#F8F9FA] relative">
+        <main className="flex-1 overflow-y-auto bg-[#F8FAFC] relative">
           {activeTab === 'dashboard' && (
             <DashboardView
               recipe={currentDashboardRecipe}
@@ -301,12 +390,16 @@ export default function App() {
 
           {activeTab === 'costeo' && (
             <CostingView
-              key={currentCostingRecipe.id}
+              key={costingSessionKey}
+              sessionKey={costingSessionKey}
               recipe={currentCostingRecipe}
               onUpdateRecipe={setCurrentCostingRecipe}
               onSaveRecipe={handleSaveCostingRecipe}
               currency={currency}
               onCurrencyChange={setCurrency}
+              onExportExcel={triggerExport}
+              onBackToList={() => setActiveTab('recetas')}
+              onNewRecipe={() => setNewRecipeModalOpen(true)}
             />
           )}
 
@@ -340,9 +433,11 @@ export default function App() {
               onUpdateProfile={setProfile}
               currency={currency}
               onCurrencyChange={setCurrency}
-              onSignOut={handleSignOut}
+              onSave={handleSaveProfile}
             />
           )}
+
+          {activeTab === 'administracion' && isAdmin && <AdminView />}
 
           {activeTab === 'ayuda' && <HelpView />}
         </main>

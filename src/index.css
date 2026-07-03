@@ -1,15 +1,87 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
+@theme {
+  --color-bc-navy: #0D1B2A;
+  --color-bc-navy-secondary: #122033;
+  --color-bc-yellow: #F5A623;
+  --color-bc-action: #1E3A8A;
+  --color-bc-gray-light: #F8FAFC;
+  --color-bc-border: #E9EEF5;
+  --color-bc-muted: #64748B;
+  --color-bc-text-secondary: #475569;
+}
+
 @layer base {
   body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    background-color: #F8F9FA;
-    color: #031D34;
+    background-color: #F8FAFC;
+    color: #0D1B2A;
   }
 
   .font-mono, code, pre, .font-data-mono {
     font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+@layer components {
+  /* BrewControl design system — surfaces, inputs, shadows */
+  .bc-sidebar {
+    background: linear-gradient(180deg, #0D1B2A 0%, #122033 100%);
+  }
+
+  .bc-card {
+    background-color: #FFFFFF;
+    border: 1px solid #E9EEF5;
+    border-radius: 24px;
+    box-shadow: 0 4px 16px rgba(13, 27, 42, 0.06);
+  }
+
+  .bc-input {
+    background-color: #F8FAFC;
+    border: 1px solid #E9EEF5;
+    border-radius: 16px;
+  }
+
+  .bc-input:focus {
+    border-color: #1E3A8A;
+    outline: none;
+    box-shadow: 0 0 0 1px rgba(30, 58, 138, 0.15);
+  }
+
+  .bc-shadow {
+    box-shadow: 0 4px 16px rgba(13, 27, 42, 0.06);
+  }
+
+  .bc-card-header {
+    padding-bottom: 1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .bc-divider {
+    border-color: #E9EEF5;
+  }
+
+  .bc-btn-primary {
+    background-color: #0D1B2A;
+    color: #FFFFFF;
+    transition: background-color 150ms ease, transform 150ms ease;
+  }
+
+  .bc-btn-primary:hover:not(:disabled) {
+    background-color: #122033;
+  }
+
+  .bc-btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .bc-segmented {
+    background-color: #F8FAFC;
+    border: 1px solid #E9EEF5;
+    border-radius: 16px;
+    padding: 4px;
   }
 }
 
@@ -22,19 +94,19 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #BAC8DC;
+  background: #CBD5E1;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #778598;
+  background: #94A3B8;
 }
 
 .ambient-shadow {
-  box-shadow: 0px 4px 12px rgba(13, 27, 42, 0.05);
+  box-shadow: 0 4px 16px rgba(13, 27, 42, 0.06);
 }
 
 .popover-shadow {
-  box-shadow: 0px 12px 32px rgba(13, 27, 42, 0.12);
+  box-shadow: 0 4px 16px rgba(13, 27, 42, 0.06);
 }
 
 /* Hide number input spinners for clean tabular look */

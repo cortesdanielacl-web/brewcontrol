@@ -1,3 +1,4 @@
+import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { DEFAULT_BLANK_RECIPE } from '../data/mockData';
 import { IndirectCosts, IngredientItem, Recipe } from '../types';
@@ -84,6 +85,19 @@ function mapRowToRecipeFromDb(row: RecipeRow): Recipe {
   return mapRowToRecipe(row, { ...DEFAULT_BLANK_RECIPE });
 }
 
+async function requireAuthenticatedUser(): Promise<User> {
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    throw new Error('Debes iniciar sesión para realizar esta acción.');
+  }
+
+  return user;
+}
+
 export async function getRecipes(): Promise<Recipe[]> {
   const {
     data: { user },
@@ -140,54 +154,44 @@ export function isPersistedRecipeId(id: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 }
 
-export async function recipeExists(id: string): Promise<boolean> {
-  const { data, error } = await supabase
-    .from('recipes')
-    .select('id')
-    .eq('id', id)
-    .maybeSingle();
-
-  if (error) {
-    // IDs locales (draft-, copy-, etc.) no son int8 válidos → no existen en BD
-    if (error.code === '22P02' || /invalid input syntax/i.test(error.message)) {
-      return false;
-    }
-    throw new Error(`No se pudo comprobar si la receta existe: ${error.message}`);
-  }
-
-  return data !== null;
-}
-
 export async function updateRecipe(recipe: Recipe): Promise<Recipe> {
+  const user = await requireAuthenticatedUser();
   const row = mapRecipeToRow(recipe);
 
   const { data, error } = await supabase
     .from('recipes')
     .update(row)
     .eq('id', recipe.id)
+    .eq('user_id', user.id)
     .select()
     .single();
 
   if (error) {
-    throw new Error(`No se pudo actualizar la receta: ${error.message}`);
+    if (error.code === 'PGRST116') {
+      throw new Error('No se encontró la receta o no tienes permiso para modificarla.');
+    }
+    throw new Error('No se pudo guardar los cambios de la receta. Intenta de nuevo más tarde.');
   }
 
   return mapRowToRecipe(data as RecipeRow, recipe);
 }
 
 export async function deleteRecipe(id: string | number): Promise<void> {
+  const user = await requireAuthenticatedUser();
   const dbId = typeof id === 'number' || /^\d+$/.test(String(id)) ? Number(id) : id;
 
-  console.log('deleteRecipe dbId:', dbId);
-  console.log('deleteRecipe typeof dbId:', typeof dbId);
-
-  const { data, error } = await supabase.from('recipes').delete().eq('id', dbId).select('id');
+  const { data, error } = await supabase
+    .from('recipes')
+    .delete()
+    .eq('id', dbId)
+    .eq('user_id', user.id)
+    .select('id');
 
   if (error) {
-    throw new Error(`No se pudo eliminar la receta: ${error.message}`);
+    throw new Error('No se pudo eliminar la receta. Intenta de nuevo más tarde.');
   }
 
   if (!data?.length) {
-    throw new Error('No se pudo eliminar la receta: ninguna fila fue eliminada.');
+    throw new Error('No se encontró la receta o no tienes permiso para eliminarla.');
   }
 }

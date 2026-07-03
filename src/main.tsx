@@ -5,7 +5,9 @@ import './index.css';
 import { AuthProvider } from './contexts/AuthContext';
 import { testSupabaseConnection } from './utils/testSupabase';
 
-testSupabaseConnection();
+if (import.meta.env.DEV) {
+  testSupabaseConnection();
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

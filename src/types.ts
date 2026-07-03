@@ -1,4 +1,4 @@
-export type NavigationTab = 'dashboard' | 'costeo' | 'recetas' | 'historial' | 'configuracion' | 'ayuda';
+export type NavigationTab = 'dashboard' | 'costeo' | 'recetas' | 'historial' | 'administracion' | 'configuracion' | 'ayuda';
 
 export type Currency = 'CLP' | 'USD' | 'EUR';
 
@@ -24,13 +24,32 @@ export interface IndirectCosts {
   arriendo: number;
   botella: number;
   tapas: number;
+  barril: number;
+  acopleSankey: number;
   etiquetas: number;
+  lata: number;
+  caja: number;
+  envasadoOtros: number;
   luz: number;
+  limpieza: number;
+  otros: number;
   transporte: number;
   co2: number;
   manoDeObra: number;
   custom: CustomExpense[];
+  /** Etapa 4 — persistido en indirect_costs (jsonb) */
+  applyIva?: boolean;
+  redcompraCommission?: number;
+  otherDiscounts?: number;
+  pricingMode?: PricingMode;
+  salePrice?: number;
 }
+
+export type PackagingFormatMl = 330 | 500 | 473 | 20000 | 30000 | 50000;
+export type PackagingType = 'bottle' | 'can' | 'keg';
+export type KegCapacityL = 20 | 30 | 50;
+
+export type PricingMode = 'automatic' | 'manual';
 
 export type BatchStatus = 'EN PROGRESO' | 'COMPLETADO' | 'PLANIFICADO' | 'BORRADOR';
 
@@ -70,12 +89,14 @@ export interface BreweryProfile {
   inventoryAutoSync: boolean;
 }
 
+export type UserRole = 'admin' | 'user';
+
 /** Fila de public.profiles (1:1 con auth.users). */
 export interface UserProfile {
   id: string;
   brewery_name: string | null;
   master_brewer: string | null;
-  role: string;
+  role: UserRole;
   active: boolean;
   created_at: string;
 }

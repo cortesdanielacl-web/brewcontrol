@@ -1,64 +1,72 @@
 import React from 'react';
 import { Sprout, PlusCircle, Trash2 } from 'lucide-react';
-import { Recipe, Currency, IngredientCategory, IngredientItem } from '../../types';
+import { Recipe, IngredientCategory, IngredientItem } from '../../types';
 import { PREDEFINED_INGREDIENTS } from '../../data/mockData';
 import { formatNumberOnly } from '../../utils/formatters';
 
-interface IngredientsSectionProps {
+interface RecipeIngredientsSectionProps {
   recipe: Recipe;
   activeTab: IngredientCategory;
   onTabChange: (cat: IngredientCategory) => void;
   currentTabIngredients: IngredientItem[];
-  currentTabSubtotal: number;
-  currency: Currency;
-  onIngredientChange: (id: string, field: keyof IngredientItem, value: any) => void;
+  onIngredientChange: (id: string, field: keyof IngredientItem, value: string | number) => void;
   onIngredientDelete: (id: string) => void;
   onAddIngredient: () => void;
 }
 
-export const IngredientsSection: React.FC<IngredientsSectionProps> = ({
+const CATEGORY_LABELS: Record<IngredientCategory, string> = {
+  maltas: 'Maltas',
+  lupulos: 'Lúpulos',
+  levaduras: 'Levaduras',
+  adjuntos: 'Adjuntos',
+};
+
+export const RecipeIngredientsSection: React.FC<RecipeIngredientsSectionProps> = ({
   recipe,
   activeTab,
   onTabChange,
   currentTabIngredients,
-  currentTabSubtotal,
-  currency,
   onIngredientChange,
   onIngredientDelete,
   onAddIngredient,
 }) => {
   const categories: IngredientCategory[] = ['maltas', 'lupulos', 'levaduras', 'adjuntos'];
   const options = PREDEFINED_INGREDIENTS[activeTab] || [];
+  const currentTabSubtotal = currentTabIngredients.reduce(
+    (acc, item) => acc + item.quantityKg * item.pricePerKg,
+    0
+  );
 
   return (
-    <section className="bg-white rounded-xl border border-[#c4c6cc]/70 p-6 shadow-xs">
-      <div className="flex items-center justify-between mb-5 border-b border-slate-100 pb-3">
+    <section className="bg-white bc-card rounded-3xl p-6">
+      <div className="flex items-center justify-between mb-5 pb-4">
         <div className="flex items-center gap-2.5">
-          <Sprout className="w-5 h-5 text-[#795900]" />
-          <h2 className="text-lg font-bold text-[#031d34]">2. Ingredientes</h2>
+          <Sprout className="w-5 h-5 text-[#F5A623]" />
+          <h2 className="text-lg font-bold text-[#0D1B2A]">Ingredientes</h2>
         </div>
         <span className="text-xs text-slate-500 font-medium">Precios en CLP / kg</span>
       </div>
 
-      {/* Category Tabs */}
-      <div className="flex gap-2 mb-6 border-b border-slate-200 overflow-x-auto">
+      <div className="flex gap-2 mb-6 pb-1 overflow-x-auto">
         {categories.map((cat) => {
           const isActive = activeTab === cat;
           const count = recipe.ingredients.filter((i) => i.category === cat).length;
+
           return (
             <button
               key={cat}
+              type="button"
               onClick={() => onTabChange(cat)}
-              className={`px-4 py-2.5 font-bold text-xs capitalize transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 border-b-2 ${
+              className={`px-4 py-2.5 font-bold text-xs transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 border-b-2 ${
                 isActive
-                  ? 'border-[#795900] text-[#031d34] bg-amber-50/50'
-                  : 'border-transparent text-slate-500 hover:text-[#031d34]'
+                  ? 'border-[#F5A623] text-[#0D1B2A] bg-amber-50/50'
+                  : 'border-transparent text-slate-500 hover:text-[#0D1B2A]'
               }`}
             >
-              <span>{cat}</span>
+              <span>{CATEGORY_LABELS[cat]}</span>
               <span
                 className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                  isActive ? 'bg-[#ffc641] text-[#715300]' : 'bg-slate-100 text-slate-600'
+                  isActive ? 'bg-[#F5A623] text-[#0D1B2A]' : 'bg-slate-100 text-slate-600'
                 }`}
               >
                 {count}
@@ -68,23 +76,22 @@ export const IngredientsSection: React.FC<IngredientsSectionProps> = ({
         })}
       </div>
 
-      {/* Ingredients Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-[#eef4ff] border-y border-[#c4c6cc]/60">
-              <th className="py-2.5 px-3 text-xs font-bold text-[#44474c] uppercase w-5/12">Ingrediente</th>
-              <th className="py-2.5 px-3 text-xs font-bold text-[#44474c] uppercase w-2/12 text-right">Cant. (Kg)</th>
-              <th className="py-2.5 px-3 text-xs font-bold text-[#44474c] uppercase w-2/12 text-right">Precio/Kg</th>
-              <th className="py-2.5 px-3 text-xs font-bold text-[#44474c] uppercase w-2/12 text-right">Subtotal</th>
+            <tr className="bg-[#F8FAFC] border-y bc-divider">
+              <th className="py-2.5 px-3 text-xs font-bold text-[#475569] uppercase w-5/12">Ingrediente</th>
+              <th className="py-2.5 px-3 text-xs font-bold text-[#475569] uppercase w-2/12 text-right">Cantidad</th>
+              <th className="py-2.5 px-3 text-xs font-bold text-[#475569] uppercase w-2/12 text-right">Precio</th>
+              <th className="py-2.5 px-3 text-xs font-bold text-[#475569] uppercase w-2/12 text-right">Subtotal</th>
               <th className="py-2.5 px-1 w-10 text-center"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-[#E9EEF5]">
             {currentTabIngredients.length === 0 ? (
               <tr>
                 <td colSpan={5} className="py-8 text-center text-sm text-slate-400 font-medium bg-slate-50/50">
-                  No hay {activeTab} añadidas en esta receta. Haz clic abajo para añadir.
+                  No hay {CATEGORY_LABELS[activeTab].toLowerCase()} en esta receta. Haz clic abajo para añadir.
                 </td>
               </tr>
             ) : (
@@ -104,9 +111,9 @@ export const IngredientsSection: React.FC<IngredientsSectionProps> = ({
                               ? 'Ej: Malta Pilsen, Munich...'
                               : activeTab === 'lupulos'
                               ? 'Ej: Lúpulo Citra, Mosaic...'
-                              : 'Ej: Levadura US-05, S-04, WLP001...'
+                              : 'Ej: Levadura US-05, S-04...'
                           }
-                          className="w-full bg-transparent border-0 border-b border-dashed border-slate-300 rounded-none px-1 py-1 text-sm text-[#031d34] font-medium focus:border-[#795900] focus:ring-0 outline-none"
+                          className="w-full bg-transparent border-0 border-b border-dashed border-[#E9EEF5] rounded-none px-1 py-1 text-sm text-[#0D1B2A] font-medium focus:border-bc-action focus:ring-0 outline-none"
                         />
                       ) : (
                         <select
@@ -120,7 +127,7 @@ export const IngredientsSection: React.FC<IngredientsSectionProps> = ({
                               onIngredientChange(item.id, 'name', e.target.value);
                             }
                           }}
-                          className="w-full bg-transparent border-0 border-b border-dashed border-slate-300 rounded-none px-1 py-1 text-sm text-[#031d34] font-medium focus:border-[#795900] focus:ring-0 outline-none cursor-pointer"
+                          className="w-full bg-transparent border-0 border-b border-dashed border-[#E9EEF5] rounded-none px-1 py-1 text-sm text-[#0D1B2A] font-medium focus:border-bc-action focus:ring-0 outline-none cursor-pointer"
                         >
                           {!options.some((o) => o.name === item.name) && (
                             <option value={item.name}>{item.name}</option>
@@ -139,7 +146,7 @@ export const IngredientsSection: React.FC<IngredientsSectionProps> = ({
                         step="0.01"
                         value={item.quantityKg || ''}
                         onChange={(e) => onIngredientChange(item.id, 'quantityKg', e.target.value)}
-                        className="w-full bg-transparent border-0 border-b border-dashed border-slate-300 rounded-none px-1 py-1 text-sm font-mono font-bold text-[#031d34] text-right focus:border-[#795900] focus:ring-0 outline-none"
+                        className="w-full bg-transparent border-0 border-b border-dashed border-[#E9EEF5] rounded-none px-1 py-1 text-sm font-mono font-bold text-[#0D1B2A] text-right focus:border-bc-action focus:ring-0 outline-none"
                       />
                     </td>
                     <td className="py-2.5 px-3">
@@ -147,14 +154,15 @@ export const IngredientsSection: React.FC<IngredientsSectionProps> = ({
                         type="number"
                         value={item.pricePerKg || ''}
                         onChange={(e) => onIngredientChange(item.id, 'pricePerKg', e.target.value)}
-                        className="w-full bg-transparent border-0 border-b border-dashed border-slate-300 rounded-none px-1 py-1 text-sm font-mono font-bold text-[#031d34] text-right focus:border-[#795900] focus:ring-0 outline-none"
+                        className="w-full bg-transparent border-0 border-b border-dashed border-[#E9EEF5] rounded-none px-1 py-1 text-sm font-mono font-bold text-[#0D1B2A] text-right focus:border-bc-action focus:ring-0 outline-none"
                       />
                     </td>
-                    <td className="py-2.5 px-3 font-mono text-sm font-bold text-[#031d34] text-right">
-                      {formatNumberOnly(subtotal, currency)}
+                    <td className="py-2.5 px-3 font-mono text-sm font-bold text-[#0D1B2A] text-right">
+                      {formatNumberOnly(subtotal, 'CLP')}
                     </td>
                     <td className="py-2.5 px-1 text-center">
                       <button
+                        type="button"
                         onClick={() => onIngredientDelete(item.id)}
                         className="text-slate-300 hover:text-red-600 p-1 rounded transition-colors cursor-pointer"
                         title="Eliminar ingrediente"
@@ -170,17 +178,18 @@ export const IngredientsSection: React.FC<IngredientsSectionProps> = ({
         </table>
       </div>
 
-      {/* Subtotal & Add Button */}
-      <div className="mt-5 pt-4 border-t border-slate-100 flex justify-between items-center">
+      <div className="mt-5 pt-4 border-t bc-divider flex justify-between items-center">
         <button
+          type="button"
           onClick={onAddIngredient}
-          className="flex items-center gap-1.5 text-[#795900] font-bold text-xs hover:text-[#ffc641] bg-amber-50 hover:bg-[#0f1c2c] transition-all px-3.5 py-2 rounded-lg cursor-pointer shadow-2xs"
+          className="flex items-center gap-1.5 text-[#F5A623] font-bold text-xs hover:text-[#F5A623] bg-amber-50 hover:bg-[#0D1B2A] transition-all px-3.5 py-2 rounded-2xl cursor-pointer bc-shadow"
         >
           <PlusCircle className="w-4 h-4" />
-          Añadir {activeTab.slice(0, -1)}
+          Añadir {CATEGORY_LABELS[activeTab].slice(0, -1).toLowerCase() || CATEGORY_LABELS[activeTab].toLowerCase()}
         </button>
-        <div className="font-mono text-sm font-bold text-[#031d34] bg-slate-100 px-4 py-2 rounded-lg border border-slate-200">
-          Subtotal {activeTab}: <span className="text-[#795900]">{formatNumberOnly(currentTabSubtotal, currency)}</span>
+        <div className="font-mono text-sm font-bold text-[#0D1B2A] bg-slate-100 px-4 py-2 rounded-2xl">
+          Subtotal {CATEGORY_LABELS[activeTab]}:{' '}
+          <span className="text-[#F5A623]">{formatNumberOnly(currentTabSubtotal, 'CLP')}</span>
         </div>
       </div>
     </section>

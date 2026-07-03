@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { NavigationTab, Currency, NotificationItem } from '../types';
-import { Menu, Bell, UserCircle, CheckCircle2, AlertTriangle, Info, X } from 'lucide-react';
+import { Menu, Bell, UserCircle, CheckCircle2, AlertTriangle, Info, X, Settings, LogOut } from 'lucide-react';
+import { BrandLogo } from './BrandLogo';
 
 interface TopbarProps {
   activeTab: NavigationTab;
@@ -10,6 +11,7 @@ interface TopbarProps {
   onMobileMenuToggle: () => void;
   notifications: NotificationItem[];
   onMarkNotificationRead: (id: string) => void;
+  onSignOut: () => void;
 }
 
 export const Topbar: React.FC<TopbarProps> = ({
@@ -20,96 +22,70 @@ export const Topbar: React.FC<TopbarProps> = ({
   onMobileMenuToggle,
   notifications,
   onMarkNotificationRead,
+  onSignOut,
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const getTitle = () => {
     switch (activeTab) {
       case 'dashboard': return 'Dashboard';
-      case 'costeo': return 'Nuevo Costeo';
+      case 'costeo': return 'Nueva Evaluación de Receta';
       case 'recetas': return 'Mis Recetas';
-      case 'historial': return 'Historial de Costeos';
+      case 'historial': return 'Historial de Evaluaciones de Receta';
       case 'configuracion': return 'Configuración de Cervecería';
+      case 'administracion': return 'Administración';
       case 'ayuda': return 'Centro de Ayuda y Fórmulas';
       default: return 'BrewControl';
     }
   };
 
   return (
-    <header className="bg-white sticky top-0 z-30 border-b border-[#c4c6cc]/60 flex justify-between items-center w-full px-4 md:px-8 h-16 shadow-xs select-none">
-      {/* Left side */}
+    <header className="bg-white sticky top-0 z-30 border-b border-bc-border flex justify-between items-center w-full px-4 md:px-8 h-16 select-none">
       <div className="flex items-center gap-3">
         <button
           onClick={onMobileMenuToggle}
-          className="md:hidden p-2 text-[#031d34] hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+          className="md:hidden p-2 text-bc-navy hover:bg-bc-gray-light rounded-2xl transition-colors cursor-pointer"
           aria-label="Abrir menú"
         >
           <Menu className="w-6 h-6" />
         </button>
 
-        {/* Mobile Brand */}
-        <span className="text-xl font-black text-[#0f1c2c] md:hidden tracking-tight">
-          BrewControl
-        </span>
+        <BrandLogo variant="short" theme="light" className="shrink-0" />
 
-        {/* Desktop Breadcrumb / Tabs */}
         <div className="hidden md:flex items-center gap-6 h-16">
-          <button
-            onClick={() => onTabChange('dashboard')}
-            className={`h-full flex items-center text-base font-bold transition-all cursor-pointer border-b-2 px-1 ${
-              activeTab === 'dashboard'
-                ? 'text-[#0f1c2c] border-[#795900]'
-                : 'text-[#74777d] border-transparent hover:text-[#0f1c2c]'
-            }`}
-          >
-            Dashboard
-          </button>
-          <button
-            onClick={() => onTabChange('costeo')}
-            className={`h-full flex items-center text-base font-bold transition-all cursor-pointer border-b-2 px-1 ${
-              activeTab === 'costeo'
-                ? 'text-[#0f1c2c] border-[#795900]'
-                : 'text-[#74777d] border-transparent hover:text-[#0f1c2c]'
-            }`}
-          >
-            Costeo
-          </button>
-          <button
-            onClick={() => onTabChange('recetas')}
-            className={`h-full flex items-center text-base font-bold transition-all cursor-pointer border-b-2 px-1 ${
-              activeTab === 'recetas'
-                ? 'text-[#0f1c2c] border-[#795900]'
-                : 'text-[#74777d] border-transparent hover:text-[#0f1c2c]'
-            }`}
-          >
-            Recetas
-          </button>
-          <button
-            onClick={() => onTabChange('historial')}
-            className={`h-full flex items-center text-base font-bold transition-all cursor-pointer border-b-2 px-1 ${
-              activeTab === 'historial'
-                ? 'text-[#0f1c2c] border-[#795900]'
-                : 'text-[#74777d] border-transparent hover:text-[#0f1c2c]'
-            }`}
-          >
-            Historial
-          </button>
+          {([
+            { id: 'dashboard' as NavigationTab, label: 'Dashboard' },
+            { id: 'costeo' as NavigationTab, label: 'Evaluación de Receta' },
+            { id: 'recetas' as NavigationTab, label: 'Recetas' },
+            { id: 'historial' as NavigationTab, label: 'Historial' },
+          ]).map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={`h-full flex items-center text-base font-bold transition-all cursor-pointer border-b-2 px-1 ${
+                activeTab === tab.id
+                  ? 'text-bc-navy border-bc-yellow'
+                  : 'text-bc-muted border-transparent hover:text-bc-navy'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Trailing Actions */}
       <div className="flex items-center gap-4 relative">
-        {/* Currency Toggle (matching screenshot 2 & 3) */}
-        <div className="flex bg-[#eef4ff] rounded-lg p-1 border border-[#c4c6cc]">
+        <div className="bc-segmented flex">
           {(['CLP', 'USD', 'EUR'] as Currency[]).map((curr) => (
             <button
               key={curr}
               onClick={() => onCurrencyChange(curr)}
               className={`px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
                 currency === curr
-                  ? 'bg-white text-[#0f1c2c] shadow-xs scale-105'
-                  : 'text-[#74777d] hover:text-[#0f1c2c]'
+                  ? 'bg-white text-bc-navy bc-shadow scale-105'
+                  : 'text-bc-muted hover:text-bc-navy'
               }`}
             >
               {curr}
@@ -117,11 +93,13 @@ export const Topbar: React.FC<TopbarProps> = ({
           ))}
         </div>
 
-        {/* Notifications Button */}
         <div className="relative">
           <button
-            onClick={() => setShowNotifications(!showNotifications)}
-            className="p-2 text-[#0f1c2c] hover:bg-slate-100 rounded-full transition-colors relative cursor-pointer"
+            onClick={() => {
+              setShowNotifications(!showNotifications);
+              setShowUserMenu(false);
+            }}
+            className="p-2 text-bc-navy hover:bg-bc-gray-light rounded-full transition-colors relative cursor-pointer"
             title="Notificaciones"
           >
             <Bell className="w-5 h-5" />
@@ -130,25 +108,24 @@ export const Topbar: React.FC<TopbarProps> = ({
             )}
           </button>
 
-          {/* Notifications Popover */}
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-80 md:w-96 bg-white rounded-xl shadow-2xl border border-slate-200 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-              <div className="p-4 bg-[#0f1c2c] text-white flex items-center justify-between">
+            <div className="absolute right-0 mt-2 w-80 md:w-96 bg-white bc-card rounded-3xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+              <div className="p-4 bg-bc-navy text-white flex items-center justify-between">
                 <div className="flex items-center gap-2 font-bold text-sm">
-                  <Bell className="w-4 h-4 text-[#ffc641]" />
+                  <Bell className="w-4 h-4 text-bc-yellow" />
                   <span>Alertas de Cervecería</span>
                 </div>
                 <button 
                   onClick={() => setShowNotifications(false)}
-                  className="text-slate-300 hover:text-white p-1 cursor-pointer"
+                  className="text-white/60 hover:text-white p-1 cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
+              <div className="max-h-80 overflow-y-auto divide-y divide-bc-border">
                 {notifications.length === 0 ? (
-                  <div className="p-6 text-center text-slate-400 text-sm">
+                  <div className="p-6 text-center text-bc-muted text-sm">
                     No hay notificaciones pendientes.
                   </div>
                 ) : (
@@ -156,21 +133,21 @@ export const Topbar: React.FC<TopbarProps> = ({
                     <div
                       key={n.id}
                       onClick={() => onMarkNotificationRead(n.id)}
-                      className={`p-3.5 hover:bg-slate-50 transition-colors cursor-pointer flex gap-3 ${
-                        !n.read ? 'bg-amber-50/40' : ''
+                      className={`p-3.5 hover:bg-bc-gray-light transition-colors cursor-pointer flex gap-3 ${
+                        !n.read ? 'bg-bc-yellow/5' : ''
                       }`}
                     >
                       <div className="mt-0.5 shrink-0">
                         {n.type === 'warning' && <AlertTriangle className="w-4 h-4 text-amber-600" />}
                         {n.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
-                        {n.type === 'info' && <Info className="w-4 h-4 text-blue-600" />}
+                        {n.type === 'info' && <Info className="w-4 h-4 text-bc-action" />}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start mb-0.5">
-                          <p className="text-xs font-bold text-slate-900">{n.title}</p>
-                          <span className="text-[10px] text-slate-400">{n.time}</span>
+                          <p className="text-xs font-bold text-bc-navy">{n.title}</p>
+                          <span className="text-[10px] text-bc-muted">{n.time}</span>
                         </div>
-                        <p className="text-xs text-slate-600 leading-normal">{n.message}</p>
+                        <p className="text-xs text-bc-text-secondary leading-normal">{n.message}</p>
                       </div>
                     </div>
                   ))
@@ -180,13 +157,49 @@ export const Topbar: React.FC<TopbarProps> = ({
           )}
         </div>
 
-        {/* User Profile Trigger */}
-        <div 
-          onClick={() => onTabChange('configuracion')}
-          className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity text-[#0f1c2c] pl-1"
-        >
-          <UserCircle className="w-7 h-7 text-[#0f1c2c]" />
-          <span className="text-sm font-bold hidden md:block">Perfil</span>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => {
+              setShowUserMenu(!showUserMenu);
+              setShowNotifications(false);
+            }}
+            className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity text-bc-navy pl-1"
+            aria-expanded={showUserMenu}
+            aria-haspopup="menu"
+          >
+            <UserCircle className="w-7 h-7 text-bc-navy" />
+            <span className="text-sm font-bold hidden md:block">Perfil</span>
+          </button>
+
+          {showUserMenu && (
+            <div className="absolute right-0 mt-2 w-52 bg-white bc-card rounded-3xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+              <div className="py-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onTabChange('configuracion');
+                    setShowUserMenu(false);
+                  }}
+                  className="w-full px-4 py-2.5 text-left text-sm font-bold text-bc-navy hover:bg-bc-gray-light transition-colors flex items-center gap-2.5 cursor-pointer"
+                >
+                  <Settings className="w-4 h-4 text-bc-muted" />
+                  Configuración
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSignOut();
+                    setShowUserMenu(false);
+                  }}
+                  className="w-full px-4 py-2.5 text-left text-sm font-medium text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2.5 cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Cerrar sesión
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </header>
