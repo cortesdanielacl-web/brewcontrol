@@ -1,7 +1,6 @@
 import React from 'react';
 import { Sprout, PlusCircle, Trash2 } from 'lucide-react';
 import { Recipe, IngredientCategory, IngredientItem } from '../../types';
-import { PREDEFINED_INGREDIENTS } from '../../data/mockData';
 import { formatNumberOnly } from '../../utils/formatters';
 
 interface RecipeIngredientsSectionProps {
@@ -21,6 +20,33 @@ const CATEGORY_LABELS: Record<IngredientCategory, string> = {
   adjuntos: 'Adjuntos',
 };
 
+const CATEGORY_QUANTITY_LABELS: Record<IngredientCategory, string> = {
+  maltas: 'Cantidad (kg)',
+  lupulos: 'Cantidad (g)',
+  levaduras: 'Cantidad (g)',
+  adjuntos: 'Cantidad',
+};
+
+const CATEGORY_QUANTITY_PLACEHOLDERS: Partial<Record<IngredientCategory, string>> = {
+  maltas: 'Ej: 5,2',
+  lupulos: 'Ej: 120',
+  levaduras: 'Ej: 11',
+};
+
+const CATEGORY_PRICE_LABELS: Record<IngredientCategory, string> = {
+  maltas: 'Precios en CLP/kg',
+  lupulos: 'Precios en CLP/g',
+  levaduras: 'Precios en CLP/sobre',
+  adjuntos: 'Precios en CLP',
+};
+
+const INGREDIENT_NAME_PLACEHOLDERS: Record<IngredientCategory, string> = {
+  maltas: 'Ej: Malta Pilsen, Munich...',
+  lupulos: 'Ej: Lúpulo Citra, Mosaic...',
+  levaduras: 'Ej: Levadura US-05, S-04...',
+  adjuntos: 'Nombre del adjunto',
+};
+
 export const RecipeIngredientsSection: React.FC<RecipeIngredientsSectionProps> = ({
   recipe,
   activeTab,
@@ -31,7 +57,6 @@ export const RecipeIngredientsSection: React.FC<RecipeIngredientsSectionProps> =
   onAddIngredient,
 }) => {
   const categories: IngredientCategory[] = ['maltas', 'lupulos', 'levaduras', 'adjuntos'];
-  const options = PREDEFINED_INGREDIENTS[activeTab] || [];
   const currentTabSubtotal = currentTabIngredients.reduce(
     (acc, item) => acc + item.quantityKg * item.pricePerKg,
     0
@@ -44,7 +69,7 @@ export const RecipeIngredientsSection: React.FC<RecipeIngredientsSectionProps> =
           <Sprout className="w-5 h-5 text-[#F5A623]" />
           <h2 className="text-lg font-bold text-[#0D1B2A]">Ingredientes</h2>
         </div>
-        <span className="text-xs text-slate-500 font-medium">Precios en CLP / kg</span>
+        <span className="text-xs text-slate-500 font-medium">{CATEGORY_PRICE_LABELS[activeTab]}</span>
       </div>
 
       <div className="flex gap-2 mb-6 pb-1 overflow-x-auto">
@@ -81,7 +106,9 @@ export const RecipeIngredientsSection: React.FC<RecipeIngredientsSectionProps> =
           <thead>
             <tr className="bg-[#F8FAFC] border-y bc-divider">
               <th className="py-2.5 px-3 text-xs font-bold text-[#475569] uppercase w-5/12">Ingrediente</th>
-              <th className="py-2.5 px-3 text-xs font-bold text-[#475569] uppercase w-2/12 text-right">Cantidad</th>
+              <th className="py-2.5 px-3 text-xs font-bold text-[#475569] uppercase w-2/12 text-right">
+                {CATEGORY_QUANTITY_LABELS[activeTab]}
+              </th>
               <th className="py-2.5 px-3 text-xs font-bold text-[#475569] uppercase w-2/12 text-right">Precio</th>
               <th className="py-2.5 px-3 text-xs font-bold text-[#475569] uppercase w-2/12 text-right">Subtotal</th>
               <th className="py-2.5 px-1 w-10 text-center"></th>
@@ -101,44 +128,13 @@ export const RecipeIngredientsSection: React.FC<RecipeIngredientsSectionProps> =
                 return (
                   <tr key={item.id} className="hover:bg-slate-50 transition-colors group">
                     <td className="py-2.5 px-3">
-                      {activeTab !== 'adjuntos' ? (
-                        <input
-                          type="text"
-                          value={item.name}
-                          onChange={(e) => onIngredientChange(item.id, 'name', e.target.value)}
-                          placeholder={
-                            activeTab === 'maltas'
-                              ? 'Ej: Malta Pilsen, Munich...'
-                              : activeTab === 'lupulos'
-                              ? 'Ej: Lúpulo Citra, Mosaic...'
-                              : 'Ej: Levadura US-05, S-04...'
-                          }
-                          className="w-full bg-transparent border-0 border-b border-dashed border-[#E9EEF5] rounded-none px-1 py-1 text-sm text-[#0D1B2A] font-medium focus:border-bc-action focus:ring-0 outline-none"
-                        />
-                      ) : (
-                        <select
-                          value={item.name}
-                          onChange={(e) => {
-                            const matched = options.find((o) => o.name === e.target.value);
-                            if (matched) {
-                              onIngredientChange(item.id, 'name', matched.name);
-                              onIngredientChange(item.id, 'pricePerKg', matched.pricePerKg);
-                            } else {
-                              onIngredientChange(item.id, 'name', e.target.value);
-                            }
-                          }}
-                          className="w-full bg-transparent border-0 border-b border-dashed border-[#E9EEF5] rounded-none px-1 py-1 text-sm text-[#0D1B2A] font-medium focus:border-bc-action focus:ring-0 outline-none cursor-pointer"
-                        >
-                          {!options.some((o) => o.name === item.name) && (
-                            <option value={item.name}>{item.name}</option>
-                          )}
-                          {options.map((opt) => (
-                            <option key={opt.name} value={opt.name}>
-                              {opt.name}
-                            </option>
-                          ))}
-                        </select>
-                      )}
+                      <input
+                        type="text"
+                        value={item.name}
+                        onChange={(e) => onIngredientChange(item.id, 'name', e.target.value)}
+                        placeholder={INGREDIENT_NAME_PLACEHOLDERS[activeTab]}
+                        className="w-full bg-transparent border-0 border-b border-dashed border-[#E9EEF5] rounded-none px-1 py-1 text-sm text-[#0D1B2A] font-medium focus:border-bc-action focus:ring-0 outline-none"
+                      />
                     </td>
                     <td className="py-2.5 px-3">
                       <input
@@ -146,6 +142,7 @@ export const RecipeIngredientsSection: React.FC<RecipeIngredientsSectionProps> =
                         step="0.01"
                         value={item.quantityKg || ''}
                         onChange={(e) => onIngredientChange(item.id, 'quantityKg', e.target.value)}
+                        placeholder={CATEGORY_QUANTITY_PLACEHOLDERS[activeTab]}
                         className="w-full bg-transparent border-0 border-b border-dashed border-[#E9EEF5] rounded-none px-1 py-1 text-sm font-mono font-bold text-[#0D1B2A] text-right focus:border-bc-action focus:ring-0 outline-none"
                       />
                     </td>

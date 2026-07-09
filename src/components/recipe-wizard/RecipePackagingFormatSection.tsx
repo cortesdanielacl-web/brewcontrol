@@ -138,7 +138,8 @@ export const RecipePackagingFormatSection: React.FC<RecipePackagingFormatSection
               <div className="space-y-1.5">
                 <p className="text-sm font-bold text-[#0D1B2A]">🍺 Barriles reutilizables</p>
                 <p className="text-xs text-[#475569] leading-relaxed">
-                  Los barriles se consideran envases reutilizables. Por esta razón BrewControl no agrega costos de
+                  Los barriles se consideran envases reutilizables. Por esta razón{' '}
+                  <span translate="no">BrewControl</span> no agrega costos de
                   envasado para este formato. El costo final corresponde únicamente al costo de producción calculado en
                   la Etapa 2.
                 </p>

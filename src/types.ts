@@ -4,12 +4,16 @@ export type Currency = 'CLP' | 'USD' | 'EUR';
 
 export type IngredientCategory = 'maltas' | 'lupulos' | 'levaduras' | 'adjuntos';
 
+export type AdjuntoUnit = 'g' | 'kg' | 'ml' | 'L' | 'unidad';
+
 export interface IngredientItem {
   id: string;
   name: string;
   category: IngredientCategory;
   quantityKg: number;
   pricePerKg: number;
+  /** Solo para adjuntos: unidad de la cantidad y del precio unitario. */
+  unit?: AdjuntoUnit;
 }
 
 export interface CustomExpense {
@@ -63,7 +67,7 @@ export interface BatchLogEvent {
 
 export interface Recipe {
   id: string;
-  code: string; // e.g. "LOTE-042" or "REC-01"
+  code: string; // e.g. "REC-042"
   name: string;
   style: string;
   volumeL: number;
@@ -79,6 +83,18 @@ export interface Recipe {
   logEvents?: BatchLogEvent[];
   costoLitro?: number | null;
 }
+
+export interface SaveRecipeResult {
+  error: string | null;
+  recipe: Recipe | null;
+}
+
+/**
+ * Única forma de mutar currentCostingRecipe desde el wizard:
+ * actualización funcional sobre el estado actual de App.
+ * No admite reemplazar el objeto completo (evita sobrescribir el UUID con un snapshot antiguo).
+ */
+export type RecipeUpdater = (prev: Recipe) => Recipe;
 
 export interface BreweryProfile {
   name: string;

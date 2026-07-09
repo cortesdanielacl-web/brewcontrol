@@ -19,8 +19,11 @@ import {
   calculateFullKegBarrels,
   calculateKegRemainingLiters,
   calculatePackagingUnits,
+  calculateIngredientSubtotal,
+  formatAdjuntoQuantity,
   formatCurrency,
   formatPackagingUnits,
+  formatRecipeDateDisplay,
   getKegCapacityL,
   getPackagingType,
   normalizePackagingFormatMl,
@@ -29,6 +32,7 @@ import {
   PACKAGING_FORMATS,
 } from '../../utils/formatters';
 import { RecipeKegPackagingResultSection } from './RecipeKegPackagingResultSection';
+import { COMING_SOON_TOOLTIP, comingSoonButtonClassName } from '../../constants/ux';
 
 interface RecipeTechnicalSheetViewProps {
   recipe: Recipe;
@@ -47,28 +51,25 @@ const CATEGORY_LABELS: Record<IngredientCategory, string> = {
   adjuntos: 'Adjuntos',
 };
 
-function formatRecipeDate(value: string): string {
-  const parsed = Date.parse(value);
-  if (!Number.isNaN(parsed)) {
-    return new Date(parsed).toLocaleDateString('es-CL', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-    });
+function formatIngredientQuantity(item: IngredientItem, category: IngredientCategory): string {
+  if (category === 'adjuntos') {
+    return formatAdjuntoQuantity(item);
   }
-  return value || '—';
+  return `${item.quantityKg.toLocaleString('es-CL')} kg`;
 }
 
 function IngredientCategoryTable({
   label,
+  category,
   items,
   currency,
 }: {
   label: string;
+  category: IngredientCategory;
   items: IngredientItem[];
   currency: Currency;
 }) {
-  const subtotal = items.reduce((acc, item) => acc + item.quantityKg * item.pricePerKg, 0);
+  const subtotal = items.reduce((acc, item) => acc + calculateIngredientSubtotal(item), 0);
 
   if (items.length === 0) return null;
 
@@ -90,13 +91,13 @@ function IngredientCategoryTable({
               <tr key={item.id}>
                 <td className="py-2.5 px-4 font-medium text-[#0D1B2A]">{item.name || '—'}</td>
                 <td className="py-2.5 px-4 font-mono text-right text-slate-600">
-                  {item.quantityKg.toLocaleString('es-CL')} kg
+                  {formatIngredientQuantity(item, category)}
                 </td>
                 <td className="py-2.5 px-4 font-mono text-right text-slate-600">
                   {formatCurrency(item.pricePerKg, currency)}
                 </td>
                 <td className="py-2.5 px-4 font-mono font-bold text-right text-[#0D1B2A]">
-                  {formatCurrency(item.quantityKg * item.pricePerKg, currency)}
+                  {formatCurrency(calculateIngredientSubtotal(item), currency)}
                 </td>
               </tr>
             ))}
@@ -139,11 +140,28 @@ function SheetSection({
   );
 }
 
-function InfoField({ label, value }: { label: string; value: React.ReactNode }) {
+function InfoField({
+  label,
+  value,
+  noTranslateLabel,
+  noTranslateValue,
+}: {
+  label: string;
+  value: React.ReactNode;
+  noTranslateLabel?: boolean;
+  noTranslateValue?: boolean;
+}) {
   return (
     <div className="space-y-1">
-      <p className="text-xs font-bold text-[#475569] tracking-wider uppercase">{label}</p>
-      <p className="text-sm font-medium text-[#0D1B2A]">{value}</p>
+      <p
+        className="text-xs font-bold text-[#475569] tracking-wider uppercase"
+        translate={noTranslateLabel ? 'no' : undefined}
+      >
+        {label}
+      </p>
+      <p className="text-sm font-medium text-[#0D1B2A]" translate={noTranslateValue ? 'no' : undefined}>
+        {value}
+      </p>
     </div>
   );
 }
@@ -189,8 +207,7 @@ function DarkInfoField({ label, value }: { label: string; value: React.ReactNode
   );
 }
 
-const exportButtonSoonClassName =
-  'bg-slate-100 text-slate-400 font-bold text-sm px-6 py-3 rounded-2xl flex items-center justify-center gap-2 cursor-not-allowed';
+const exportButtonSoonClassName = `${comingSoonButtonClassName} font-bold text-sm px-6 py-3 rounded-2xl justify-center`;
 
 export const RecipeTechnicalSheetView: React.FC<RecipeTechnicalSheetViewProps> = ({
   recipe,
@@ -217,7 +234,7 @@ export const RecipeTechnicalSheetView: React.FC<RecipeTechnicalSheetViewProps> =
     ? `${stage4.units.toLocaleString('es-CL')} barriles`
     : formatPackagingUnits(stage4.units, packagingType);
 
-  const creationDate = formatRecipeDate(recipe.lastModified);
+  const creationDate = formatRecipeDateDisplay(recipe.lastModified);
 
   return (
     <div
@@ -229,7 +246,7 @@ export const RecipeTechnicalSheetView: React.FC<RecipeTechnicalSheetViewProps> =
       <header data-section="encabezado" className="space-y-4">
         <div>
           <h1 className="text-4xl md:text-5xl font-black tracking-tight text-[#0D1B2A]">
-            📋 Ficha Técnica de Elaboración
+            📋 Ficha técnica de la receta
           </h1>
           <p className="text-base text-[#475569] mt-1.5">
             Resumen final del asistente — base para exportación y archivo técnico.
@@ -240,7 +257,10 @@ export const RecipeTechnicalSheetView: React.FC<RecipeTechnicalSheetViewProps> =
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <InfoField label="Nombre de la receta" value={recipe.name || '—'} />
             <InfoField label="Fecha de creación" value={creationDate} />
-            <InfoField label="Última actualización" value={recipe.lastModified || '—'} />
+            <InfoField
+              label="Última actualización"
+              value={formatRecipeDateDisplay(recipe.lastModified, { includeTime: true })}
+            />
           </div>
         </div>
       </header>
@@ -248,10 +268,10 @@ export const RecipeTechnicalSheetView: React.FC<RecipeTechnicalSheetViewProps> =
       {/* Información general */}
       <SheetSection icon={<ClipboardList className="w-5 h-5 text-[#F5A623]" />} title="Información general" sectionId="informacion-general">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <InfoField label="Estilo" value={recipe.style || '—'} />
+          <InfoField label="Estilo" value={recipe.style || '—'} noTranslateValue />
           <InfoField label="Litros objetivo" value={`${recipe.volumeL.toLocaleString('es-CL')} L`} />
-          <InfoField label="ABV" value={`${recipe.abv.toFixed(1)}%`} />
-          <InfoField label="IBU" value={recipe.ibu.toLocaleString('es-CL')} />
+          <InfoField label="ABV" value={`${recipe.abv.toFixed(1)}%`} noTranslateLabel />
+          <InfoField label="IBU" value={recipe.ibu.toLocaleString('es-CL')} noTranslateLabel />
         </div>
       </SheetSection>
 
@@ -262,6 +282,7 @@ export const RecipeTechnicalSheetView: React.FC<RecipeTechnicalSheetViewProps> =
             <React.Fragment key={cat}>
               <IngredientCategoryTable
                 label={CATEGORY_LABELS[cat]}
+                category={cat}
                 items={recipe.ingredients.filter((i) => i.category === cat)}
                 currency={currency}
               />
@@ -295,23 +316,38 @@ export const RecipeTechnicalSheetView: React.FC<RecipeTechnicalSheetViewProps> =
             ))}
           </div>
 
-          <div className="bg-[#0D1B2A] rounded-3xl border border-[#F5A623]/30 p-6 bc-shadow">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <div>
-                <p className="text-xs font-bold text-slate-400 tracking-wider uppercase mb-1">Costos de producción</p>
-                <p className="text-xl font-mono font-black text-[#F5A623]">
+          <div className="bg-[#0D1B2A] rounded-3xl border border-[#F5A623]/30 px-4 py-4 sm:px-5 sm:py-4 bc-shadow">
+            <h3 className="text-sm font-bold text-[#F5A623] tracking-wide mb-3">💰 Resumen de costos</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-xs font-bold text-slate-400 tracking-wider uppercase mb-0.5 leading-tight">
+                  Costo total de ingredientes
+                </p>
+                <p className="text-base font-mono font-black text-white">
+                  {formatCurrency(stage2.ingredientsCost, currency)}
+                </p>
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-xs font-bold text-slate-400 tracking-wider uppercase mb-0.5 leading-tight">
+                  Costos de producción
+                </p>
+                <p className="text-base font-mono font-black text-white">
                   {formatCurrency(stage2.productionCostsTotal, currency)}
                 </p>
               </div>
-              <div>
-                <p className="text-xs font-bold text-slate-400 tracking-wider uppercase mb-1">Costo total del lote</p>
-                <p className="text-xl font-mono font-black text-white">
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-xs font-bold text-slate-400 tracking-wider uppercase mb-0.5 leading-tight">
+                  Costo total de la receta
+                </p>
+                <p className="text-base font-mono font-black text-white">
                   {formatCurrency(stage2.totalBatchCost, currency)}
                 </p>
               </div>
-              <div>
-                <p className="text-xs font-bold text-slate-400 tracking-wider uppercase mb-1">Costo por litro</p>
-                <p className="text-xl font-mono font-black text-white">
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-xs font-bold text-[#F5A623] tracking-wider uppercase mb-0.5 leading-tight">
+                  Costo por litro
+                </p>
+                <p className="text-xl sm:text-2xl font-mono font-black text-[#F5A623] leading-tight">
                   {formatCurrency(stage2.costPerLiter, currency)}
                 </p>
               </div>
@@ -323,15 +359,14 @@ export const RecipeTechnicalSheetView: React.FC<RecipeTechnicalSheetViewProps> =
       {/* Evaluación comercial */}
       <SheetSection icon={<Package className="w-5 h-5 text-[#F5A623]" />} title="Evaluación comercial" sectionId="evaluacion-comercial">
         {isKeg ? (
-          <div className="space-y-4">
-            <RecipeKegPackagingResultSection
-              volumeL={recipe.volumeL}
-              capacityL={capacityL}
-              fullBarrels={fullBarrels}
-              remainingLiters={remainingLiters}
-            />
-            <InfoField label="Costo por barril" value={formatCurrency(stage3.finalCostPerUnit, currency)} />
-          </div>
+          <RecipeKegPackagingResultSection
+            volumeL={recipe.volumeL}
+            capacityL={capacityL}
+            fullBarrels={fullBarrels}
+            remainingLiters={remainingLiters}
+            costPerBarrel={formatCurrency(stage3.finalCostPerUnit, currency)}
+            showTitle={false}
+          />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <InfoField label="Formato" value={formatLabel} />
@@ -387,7 +422,7 @@ export const RecipeTechnicalSheetView: React.FC<RecipeTechnicalSheetViewProps> =
           <ProfitabilitySubBlock title="Rentabilidad" variant="dark">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <DarkInfoField label="Utilidad por unidad" value={formatCurrency(stage4.utilidadPorUnidad, currency)} />
-              <DarkInfoField label="Utilidad total del lote" value={formatCurrency(stage4.utilidadTotal, currency)} />
+              <DarkInfoField label="Utilidad total de la receta" value={formatCurrency(stage4.utilidadTotal, currency)} />
               <DarkInfoField label="Margen real" value={`${stage4.margenReal.toFixed(1)}%`} />
             </div>
           </ProfitabilitySubBlock>
@@ -413,24 +448,22 @@ export const RecipeTechnicalSheetView: React.FC<RecipeTechnicalSheetViewProps> =
           type="button"
           disabled
           aria-disabled="true"
-          title="Próximamente"
+          title={COMING_SOON_TOOLTIP}
           className={exportButtonSoonClassName}
         >
           <FileSpreadsheet className="w-4 h-4" />
-          <span>📊 Exportar Excel</span>
-          <span className="text-[10px] font-semibold uppercase tracking-wide">Próximamente</span>
+          <span>Exportar Excel</span>
         </button>
 
         <button
           type="button"
           disabled
           aria-disabled="true"
-          title="Próximamente"
+          title={COMING_SOON_TOOLTIP}
           className={exportButtonSoonClassName}
         >
           <FileText className="w-4 h-4" />
-          <span>📄 Exportar PDF</span>
-          <span className="text-[10px] font-semibold uppercase tracking-wide">Próximamente</span>
+          <span>Exportar PDF</span>
         </button>
 
         <button
@@ -439,7 +472,7 @@ export const RecipeTechnicalSheetView: React.FC<RecipeTechnicalSheetViewProps> =
           className="text-[#0D1B2A] hover:bg-slate-100 active:scale-98 transition-all font-bold text-sm px-6 py-3 rounded-2xl flex items-center justify-center gap-2 cursor-pointer"
         >
           <BookOpen className="w-4 h-4" />
-          <span>📚 Volver al listado</span>
+          <span>Volver al listado</span>
         </button>
 
         <button
@@ -448,7 +481,7 @@ export const RecipeTechnicalSheetView: React.FC<RecipeTechnicalSheetViewProps> =
           className="bg-[#F5A623] text-[#0D1B2A] hover:bg-[#FBB040] active:scale-98 transition-all font-bold text-sm px-6 py-3 rounded-2xl bc-shadow flex items-center justify-center gap-2 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          <span>➕ Nueva receta</span>
+          <span>Nueva receta</span>
         </button>
       </footer>
     </div>

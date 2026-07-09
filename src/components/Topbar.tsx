@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { NavigationTab, Currency, NotificationItem } from '../types';
 import { Menu, Bell, UserCircle, CheckCircle2, AlertTriangle, Info, X, Settings, LogOut } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
@@ -26,7 +26,22 @@ export const Topbar: React.FC<TopbarProps> = ({
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  useEffect(() => {
+    if (!showNotifications && !showUserMenu) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (headerRef.current && !headerRef.current.contains(event.target as Node)) {
+        setShowNotifications(false);
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, [showNotifications, showUserMenu]);
 
   const getTitle = () => {
     switch (activeTab) {
@@ -42,7 +57,7 @@ export const Topbar: React.FC<TopbarProps> = ({
   };
 
   return (
-    <header className="bg-white sticky top-0 z-30 border-b border-bc-border flex justify-between items-center w-full px-4 md:px-8 h-16 select-none">
+    <header ref={headerRef} className="bg-white sticky top-0 z-30 border-b border-bc-border flex justify-between items-center w-full px-4 md:px-8 h-16 select-none">
       <div className="flex items-center gap-3">
         <button
           onClick={onMobileMenuToggle}
@@ -70,7 +85,7 @@ export const Topbar: React.FC<TopbarProps> = ({
                   : 'text-bc-muted border-transparent hover:text-bc-navy'
               }`}
             >
-              {tab.label}
+              <span translate={tab.id === 'dashboard' ? 'no' : undefined}>{tab.label}</span>
             </button>
           ))}
         </div>

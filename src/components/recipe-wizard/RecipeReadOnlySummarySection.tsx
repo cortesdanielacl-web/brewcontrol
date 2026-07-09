@@ -30,7 +30,7 @@ export const RecipeReadOnlySummarySection: React.FC<RecipeReadOnlySummarySection
         </div>
         <div className="space-y-1">
           <p className="text-xs font-bold text-[#475569] tracking-wider uppercase">Estilo</p>
-          <p className="text-sm font-medium text-[#0D1B2A]">{recipe.style || '—'}</p>
+          <p className="text-sm font-medium text-[#0D1B2A]" translate="no">{recipe.style || '—'}</p>
         </div>
         <div className="space-y-1">
           <p className="text-xs font-bold text-[#475569] tracking-wider uppercase">Litros objetivo</p>

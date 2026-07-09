@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Recipe, Currency } from '../types';
 import { formatNumberOnly, calculateRecipeFinancials, formatLastModifiedDisplay } from '../utils/formatters';
-import { Search, Filter, Plus, Edit, Copy, Trash2, Beer, Sparkles } from 'lucide-react';
+import { Search, Filter, Plus, Edit, Copy, Trash2, Beer } from 'lucide-react';
+import { COMING_SOON_TOOLTIP, comingSoonToolbarButtonClassName } from '../constants/ux';
 
 interface RecipesViewProps {
   recipes: Recipe[];
@@ -87,7 +88,9 @@ export const RecipesView: React.FC<RecipesViewProps> = ({
           <span className="text-xs font-bold text-[#475569] uppercase tracking-wider">Total Recetas</span>
           <div className="flex items-baseline gap-2 mt-2">
             <span className="text-5xl font-black text-[#0D1B2A] leading-none">{totalRecipesCount}</span>
-            <span className="text-xs font-bold text-[#F5A623]">+2 este mes</span>
+            {totalRecipesCount > 0 && (
+              <span className="text-xs font-semibold text-slate-400">en tu catálogo</span>
+            )}
           </div>
         </div>
 
@@ -109,7 +112,9 @@ export const RecipesView: React.FC<RecipesViewProps> = ({
             <div className="p-2 bg-amber-50 rounded-xl text-[#F5A623]">
               <Beer className="w-6 h-6" />
             </div>
-            <span className="text-2xl md:text-3xl font-black text-[#0D1B2A] tracking-tight">{dominantStyleLabel}</span>
+            <span className="text-2xl md:text-3xl font-black text-[#0D1B2A] tracking-tight" translate="no">
+              {dominantStyleLabel}
+            </span>
           </div>
         </div>
       </div>
@@ -129,8 +134,14 @@ export const RecipesView: React.FC<RecipesViewProps> = ({
             />
           </div>
 
-          <button className="hidden sm:flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-[#0D1B2A] bg-[#F8FAFC] hover:bg-white rounded-2xl transition-colors cursor-pointer">
-            <Filter className="w-3.5 h-3.5 text-[#0D1B2A]" />
+          <button
+            type="button"
+            disabled
+            aria-disabled="true"
+            title={COMING_SOON_TOOLTIP}
+            className={`hidden sm:flex ${comingSoonToolbarButtonClassName}`}
+          >
+            <Filter className="w-3.5 h-3.5" />
             <span>Filtros avanzados</span>
           </button>
         </div>
@@ -159,7 +170,7 @@ export const RecipesView: React.FC<RecipesViewProps> = ({
                       className="bg-[#0D1B2A] text-white hover:bg-[#122033] active:scale-95 transition-all px-5 py-2.5 rounded-2xl font-bold text-xs inline-flex items-center gap-1.5 bc-shadow cursor-pointer"
                     >
                       <Plus className="w-4 h-4" />
-                      + Crear primera receta
+                      Crear primera receta
                     </button>
                   </td>
                 </tr>
@@ -172,7 +183,6 @@ export const RecipesView: React.FC<RecipesViewProps> = ({
               ) : (
                 filtered.map((recipe) => {
                   const fin = calculateRecipeFinancials(recipe);
-                  const isGoldStyle = recipe.style.includes('Pilsner') || recipe.style.includes('Stout');
 
                   return (
                     <tr key={recipe.id} className="hover:bg-bc-action/10/30 transition-colors group">
@@ -185,13 +195,16 @@ export const RecipesView: React.FC<RecipesViewProps> = ({
                         </div>
                       </td>
                       <td className="py-4 px-6">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${
+                        <span
+                          translate="no"
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${
                           recipe.style.includes('Stout')
                             ? 'bg-[#0D1B2A] text-[#FBB040] border-slate-700'
                             : recipe.style.includes('Pilsner')
                             ? 'bg-[#FBB040] text-[#122033] border-[#F5A623]'
                             : 'bg-[#F8FAFC] text-[#0D1B2A] border-[rgba(255,255,255,0.55)]'
-                        }`}>
+                        }`}
+                        >
                           {recipe.style}
                         </span>
                       </td>
@@ -240,11 +253,18 @@ export const RecipesView: React.FC<RecipesViewProps> = ({
         {/* Table Footer */}
         <div className="px-6 py-4 border-t bc-divider bg-[#F8FAFC] flex items-center justify-between">
           <span className="text-xs font-semibold text-slate-500">
-            Mostrando {filtered.length} de {recipes.length} recetas en tu base local
+            Mostrando {filtered.length} de {recipes.length} recetas
           </span>
-          <div className="flex gap-1.5">
-            <button disabled className="p-1.5 rounded text-slate-300 bg-white"><Filter className="w-4 h-4 rotate-90" /></button>
-          </div>
+          <button
+            type="button"
+            disabled
+            aria-disabled="true"
+            title={COMING_SOON_TOOLTIP}
+            className="p-1.5 rounded text-slate-300 bg-white cursor-not-allowed"
+          >
+            <Filter className="w-4 h-4 rotate-90" aria-hidden />
+            <span className="sr-only">Paginación — {COMING_SOON_TOOLTIP}</span>
+          </button>
         </div>
       </div>
     </div>

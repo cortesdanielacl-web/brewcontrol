@@ -1,0 +1,10 @@
+export { LandingPage } from './LandingPage';
+export { LandingNavbar } from './LandingNavbar';
+export { LandingHero } from './LandingHero';
+export { LandingProblem } from './LandingProblem';
+export { LandingSolution } from './LandingSolution';
+export { LandingBenefits } from './LandingBenefits';
+export { LandingManifesto } from './LandingManifesto';
+export { LandingCTA } from './LandingCTA';
+export { LandingFooter } from './LandingFooter';
+export { LandingResultPhoto } from './LandingResultPhoto';

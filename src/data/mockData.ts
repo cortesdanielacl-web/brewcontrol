@@ -53,8 +53,8 @@ export const INITIAL_RECIPES: Recipe[] = [];
 
 export const DEFAULT_BLANK_RECIPE: Recipe = {
   id: 'draft-initial',
-  code: 'LOTE-001',
-  name: 'Mi Primer Lote',
+  code: 'REC-001',
+  name: 'Mi primera receta',
   style: 'Estilo Libre',
   volumeL: 100,
   og: 1.050,

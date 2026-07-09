@@ -17,7 +17,7 @@ export const RecipeParametersSection: React.FC<RecipeParametersSectionProps> = (
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
         <div className="space-y-1.5">
-          <label className="text-xs font-bold text-[#475569] tracking-wider uppercase">ABV (%)</label>
+          <label className="text-xs font-bold text-[#475569] tracking-wider uppercase" translate="no">ABV (%)</label>
           <input
             type="number"
             step="0.1"
@@ -28,7 +28,7 @@ export const RecipeParametersSection: React.FC<RecipeParametersSectionProps> = (
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs font-bold text-[#475569] tracking-wider uppercase">IBU</label>
+          <label className="text-xs font-bold text-[#475569] tracking-wider uppercase" translate="no">IBU</label>
           <input
             type="number"
             value={recipe.ibu || ''}

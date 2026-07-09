@@ -59,14 +59,14 @@ export const NewRecipeModal: React.FC<NewRecipeModalProps> = ({
 
         <div className="p-6 space-y-5 text-[#0D1B2A]">
           <p className="text-sm text-[#475569] leading-relaxed">
-            Comenzarás con la <strong className="font-bold text-[#0D1B2A]">Elaboración de la Receta</strong>:
+            Comenzarás con la <strong className="font-bold text-[#0D1B2A]">Definición de la Receta</strong>:
             información básica, parámetros técnicos e ingredientes. Los costos y la rentabilidad se definirán en las
             etapas siguientes.
           </p>
 
           <div className="bc-input p-4 text-xs text-[#475569] space-y-1">
             <p className="font-bold text-[#0D1B2A] uppercase tracking-wider">Paso 1 de 4</p>
-            <p>🍺 Elaboración de la Receta</p>
+            <p>🍺 Definición de la Receta</p>
           </div>
 
           <div className="flex justify-end gap-3 pt-2 border-t bc-divider">

@@ -50,7 +50,7 @@ export const RecipeProfitabilityResultsSection: React.FC<RecipeProfitabilityResu
           </p>
         </div>
         <div>
-          <p className="text-xs font-bold text-slate-400 tracking-wider uppercase mb-1">Utilidad total del lote</p>
+          <p className="text-xs font-bold text-slate-400 tracking-wider uppercase mb-1">Utilidad total de la receta</p>
           <p className={`text-xl font-mono font-black ${isProfit ? 'text-emerald-400' : 'text-red-400'}`}>
             {formatCurrency(utilidadTotal, currency)}
           </p>

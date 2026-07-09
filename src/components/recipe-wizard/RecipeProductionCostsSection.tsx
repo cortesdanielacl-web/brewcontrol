@@ -64,28 +64,33 @@ export const RecipeProductionCostsSection: React.FC<RecipeProductionCostsSection
       </section>
 
       {/* 3. Resumen final de costos */}
-      <section className="bg-[#0D1B2A] rounded-3xl border border-[#F5A623]/30 p-6 bc-shadow">
-        <h2 className="text-sm font-bold text-[#F5A623] tracking-wide mb-5">💰 Resumen de costos</h2>
+      <section className="bg-[#0D1B2A] rounded-3xl border border-[#F5A623]/30 px-4 py-4 sm:px-5 sm:py-4 bc-shadow">
+        <h2 className="text-sm font-bold text-[#F5A623] tracking-wide mb-3">💰 Resumen de costos</h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
-          <div>
-            <p className="text-xs font-bold text-slate-400 tracking-wider uppercase mb-1">Costo total ingredientes</p>
-            <p className="text-lg font-mono font-black text-white">{formatCurrency(ingredientsCost, currency)}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+          <div className="min-w-0">
+            <p className="text-[10px] sm:text-xs font-bold text-slate-400 tracking-wider uppercase mb-0.5 leading-tight">
+              Costo total ingredientes
+            </p>
+            <p className="text-base font-mono font-black text-white">{formatCurrency(ingredientsCost, currency)}</p>
           </div>
-          <div>
-            <p className="text-xs font-bold text-slate-400 tracking-wider uppercase mb-1">Costo total producción</p>
-            <p className="text-lg font-mono font-black text-white">{formatCurrency(productionCostsTotal, currency)}</p>
+          <div className="min-w-0">
+            <p className="text-[10px] sm:text-xs font-bold text-slate-400 tracking-wider uppercase mb-0.5 leading-tight">
+              Costo total producción
+            </p>
+            <p className="text-base font-mono font-black text-white">{formatCurrency(productionCostsTotal, currency)}</p>
           </div>
-        </div>
-
-        <div className="border-t border-[#F5A623]/20 pt-5 space-y-4">
-          <div>
-            <p className="text-xs font-bold text-slate-400 tracking-wider uppercase mb-1">Costo real del lote</p>
-            <p className="text-xl font-mono font-black text-white">{formatCurrency(totalBatchCost, currency)}</p>
+          <div className="min-w-0">
+            <p className="text-[10px] sm:text-xs font-bold text-slate-400 tracking-wider uppercase mb-0.5 leading-tight">
+              Costo total de la receta
+            </p>
+            <p className="text-base font-mono font-black text-white">{formatCurrency(totalBatchCost, currency)}</p>
           </div>
-          <div className="bg-[#0D1B2A]/60 rounded-3xl border border-[#F5A623]/40 p-5">
-            <p className="text-xs font-bold text-[#F5A623] tracking-wider uppercase mb-2">Costo real de producción ($/L)</p>
-            <p className="text-3xl sm:text-4xl font-mono font-black text-white leading-tight">
+          <div className="min-w-0">
+            <p className="text-[10px] sm:text-xs font-bold text-[#F5A623] tracking-wider uppercase mb-0.5 leading-tight">
+              Costo de producción ($/L)
+            </p>
+            <p className="text-xl sm:text-2xl font-mono font-black text-[#F5A623] leading-tight">
               {formatCurrency(costPerLiter, currency)}
             </p>
           </div>

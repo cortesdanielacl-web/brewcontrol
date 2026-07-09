@@ -28,6 +28,7 @@ import {
   ClipboardList,
   Construction,
 } from 'lucide-react';
+import { COMING_SOON_TOOLTIP, comingSoonButtonClassName } from '../constants/ux';
 
 interface DashboardViewProps {
   recipe?: Recipe | null;
@@ -35,17 +36,31 @@ interface DashboardViewProps {
   onEditRecipe: (recipe: Recipe) => void;
   onExport: () => void;
   onTabChange: (t: NavigationTab) => void;
-  onStartFirstBatch?: () => void;
+  onStartFirstRecipe?: () => void;
 }
 
-const exportButtonSoonClassName =
-  'text-xs font-bold bg-slate-100 text-slate-400 px-4 py-2.5 rounded-2xl flex items-center gap-2 cursor-not-allowed';
-
-function SummaryField({ label, value }: { label: string; value: React.ReactNode }) {
+function SummaryField({
+  label,
+  value,
+  noTranslateLabel,
+  noTranslateValue,
+}: {
+  label: string;
+  value: React.ReactNode;
+  noTranslateLabel?: boolean;
+  noTranslateValue?: boolean;
+}) {
   return (
     <div className="space-y-1">
-      <p className="text-xs font-bold text-[#475569] tracking-wider uppercase">{label}</p>
-      <p className="text-sm font-medium text-[#0D1B2A]">{value}</p>
+      <p
+        className="text-xs font-bold text-[#475569] tracking-wider uppercase"
+        translate={noTranslateLabel ? 'no' : undefined}
+      >
+        {label}
+      </p>
+      <p className="text-sm font-medium text-[#0D1B2A]" translate={noTranslateValue ? 'no' : undefined}>
+        {value}
+      </p>
     </div>
   );
 }
@@ -62,9 +77,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   recipe,
   currency,
   onEditRecipe,
-  onExport: _onExport,
   onTabChange,
-  onStartFirstBatch,
 }) => {
   const fin = recipe ? calculateRecipeFinancials(recipe) : null;
   const stage2 = recipe ? calculateStage2Financials(recipe) : null;
@@ -102,7 +115,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               Instalación Nueva
             </span>
             <h1 className="text-3xl md:text-4xl font-black tracking-tight text-[#0D1B2A] mt-3">
-              Bienvenido a BrewControl
+              Bienvenido a <span translate="no">BrewControl</span>
             </h1>
             <p className="text-slate-600 text-base mt-2 leading-relaxed">
               Aún no has registrado ninguna receta.
@@ -111,14 +124,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </p>
           </div>
           <button
-            onClick={() => {
-              if (onStartFirstBatch) onStartFirstBatch();
-              else onTabChange('costeo');
-            }}
+            type="button"
+            onClick={() => onTabChange('costeo')}
             className="shrink-0 bc-btn-primary active:scale-95 transition-all px-6 py-3.5 rounded-2xl font-bold text-sm flex items-center gap-2 cursor-pointer"
           >
             <PlusCircle className="w-5 h-5 text-[#F5A623]" />
-            + Crear mi primer lote
+            Crear mi primera evaluación
           </button>
         </section>
       ) : (
@@ -141,12 +152,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 {recipe.volumeL}L Volumen
               </span>
               <span className="text-[#c4c6cc]">•</span>
-              <span className="flex items-center gap-1.5 bg-white px-3 py-1 rounded-full">
+              <span className="flex items-center gap-1.5 bg-white px-3 py-1 rounded-full" translate="no">
                 <Percent className="w-4 h-4 text-[#0D1B2A]" />
                 {recipe.abv}% ABV
               </span>
               <span className="text-[#c4c6cc]">•</span>
-              <span className="text-xs text-slate-500">Estilo: {recipe.style}</span>
+              <span className="text-xs text-slate-500">
+                Estilo: <span translate="no">{recipe.style}</span>
+              </span>
             </div>
           </div>
 
@@ -155,12 +168,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               type="button"
               disabled
               aria-disabled="true"
-              title="Próximamente"
-              className={exportButtonSoonClassName}
+              title={COMING_SOON_TOOLTIP}
+              className={comingSoonButtonClassName}
             >
               <Download className="w-4 h-4" />
               <span>Exportar</span>
-              <span className="text-[10px] font-semibold uppercase tracking-wide">Próximamente</span>
             </button>
             <button
               onClick={() => {
@@ -178,10 +190,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       {/* KPI Bento Grid */}
       <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {/* Costo total del lote */}
+        {/* Costo total de la receta */}
         <div className="bg-white bc-card rounded-3xl p-5 flex flex-col justify-between h-36 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#475569] uppercase tracking-wider">Costo Total del Lote</span>
+            <span className="text-xs font-bold text-[#475569] uppercase tracking-wider">Costo total de la receta</span>
             <div className="p-2 bg-slate-50 rounded-lg text-slate-600">
               <DollarSign className="w-4 h-4" />
             </div>
@@ -190,15 +202,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div className="text-2xl md:text-3xl font-black text-[#0D1B2A] tracking-tight font-mono">
               {fin ? formatNumberOnly(fin.totalCost, currency) : formatNumberOnly(0, currency)}
             </div>
-            <span className="text-[11px] font-semibold text-slate-400 uppercase mt-0.5 block">{currency} Producción</span>
+            <span className="text-[11px] font-semibold text-slate-400 uppercase mt-0.5 block">{currency} · total receta</span>
           </div>
         </div>
 
-        {/* Costo real de producción ($/L) — indicador principal */}
+        {/* Costo de producción ($/L) — indicador principal */}
         <div className="bg-[#0D1B2A] rounded-3xl border border-[#F5A623]/40 p-5 flex flex-col justify-between h-36 bc-shadow transition-all">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[#F5A623] uppercase tracking-wider leading-tight">
-              Costo Real de Producción
+              Costo de producción
             </span>
             <div className="p-2 bg-[#F5A623]/15 rounded-lg text-[#F5A623]">
               <Droplet className="w-4 h-4" />
@@ -209,7 +221,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               {fin ? formatNumberOnly(fin.costPerLiter, currency) : formatNumberOnly(0, currency)}
             </div>
             <span className="text-[11px] font-semibold text-slate-400 mt-0.5 block">
-              {recipe ? `$/L · Lote de ${recipe.volumeL} Lts` : '$/L · Lote de 0 Lts'}
+              {recipe ? `$/L · ${recipe.volumeL} L objetivo` : '$/L · 0 L objetivo'}
             </span>
           </div>
         </div>
@@ -278,19 +290,26 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
-          {recipe && fin && stage2 && (
+          {!recipe ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <ClipboardList className="w-10 h-10 text-slate-300 mb-3" />
+              <p className="text-sm font-medium text-slate-500 max-w-sm leading-relaxed">
+                Cuando completes una evaluación de receta, aquí verás el resumen de costos y formato comercial.
+              </p>
+            </div>
+          ) : recipe && fin && stage2 ? (
             <div className="flex flex-col gap-8">
               {/* Información general */}
               <div>
                 <SummarySectionTitle>Información general</SummarySectionTitle>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <SummaryField label="Estilo" value={recipe.style || '—'} />
+                  <SummaryField label="Estilo" value={recipe.style || '—'} noTranslateValue />
                   <SummaryField
                     label="Litros objetivo"
                     value={`${recipe.volumeL.toLocaleString('es-CL')} L`}
                   />
-                  <SummaryField label="ABV" value={`${recipe.abv}%`} />
-                  <SummaryField label="IBU" value={recipe.ibu.toLocaleString('es-CL')} />
+                  <SummaryField label="ABV" value={`${recipe.abv}%`} noTranslateLabel />
+                  <SummaryField label="IBU" value={recipe.ibu.toLocaleString('es-CL')} noTranslateLabel />
                 </div>
               </div>
 
@@ -315,7 +334,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     }
                   />
                   <SummaryField
-                    label="Costo real del lote"
+                    label="Costo total de la receta"
                     value={
                       <span className="font-mono font-bold">
                         {formatCurrency(stage2.totalBatchCost, currency)}
@@ -323,7 +342,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     }
                   />
                   <SummaryField
-                    label="Costo real de producción ($/L)"
+                    label="Costo de producción ($/L)"
                     value={
                       <span className="font-mono font-bold text-[#F5A623]">
                         {formatCurrency(stage2.costPerLiter, currency)}
@@ -361,7 +380,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 )}
               </div>
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Producción */}
@@ -371,15 +390,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <Construction className="w-5 h-5 text-[#F5A623]" />
               <h2 className="text-xl font-bold text-[#0D1B2A]">🚧 Producción</h2>
             </div>
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">
-              Próximamente
+            <span
+              className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full"
+              title={COMING_SOON_TOOLTIP}
+            >
+              Disponible próximamente
             </span>
           </div>
 
           <div className="flex-1 flex flex-col items-center justify-center text-center py-10 px-4">
             <Construction className="w-10 h-10 text-slate-300 mb-4" />
             <p className="text-sm font-medium text-slate-500 leading-relaxed max-w-xs">
-              La gestión de producción estará disponible en una próxima versión de BrewControl.
+              La gestión de lotes y producción estará disponible en una próxima versión de{' '}
+              <span translate="no">BrewControl</span>.
             </p>
           </div>
         </div>

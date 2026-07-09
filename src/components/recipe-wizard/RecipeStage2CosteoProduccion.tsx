@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
-import { Recipe, Currency } from '../../types';
+import { Recipe, Currency, RecipeUpdater } from '../../types';
 import { ProductionCostField } from '../../utils/formatters';
 import { RecipeReadOnlySummarySection } from './RecipeReadOnlySummarySection';
 import { RecipeProductionCostsSection } from './RecipeProductionCostsSection';
@@ -8,7 +8,7 @@ import { RecipeProductionCostsSection } from './RecipeProductionCostsSection';
 interface RecipeStage2CosteoProduccionProps {
   recipe: Recipe;
   currency: Currency;
-  onUpdateRecipe: (updated: Recipe) => void;
+  onUpdateRecipe: (update: RecipeUpdater) => void;
   onBack: () => void;
   onSaveAndContinue: () => Promise<void>;
   savedToast: boolean;
@@ -25,14 +25,14 @@ export const RecipeStage2CosteoProduccion: React.FC<RecipeStage2CosteoProduccion
   saving,
 }) => {
   const handleProductionCostChange = (field: ProductionCostField, value: number) => {
-    onUpdateRecipe({
-      ...recipe,
+    onUpdateRecipe((prev) => ({
+      ...prev,
       indirectCosts: {
-        ...recipe.indirectCosts,
+        ...prev.indirectCosts,
         [field]: Number(value) >= 0 ? Number(value) : 0,
       },
       lastModified: 'Hace un momento',
-    });
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

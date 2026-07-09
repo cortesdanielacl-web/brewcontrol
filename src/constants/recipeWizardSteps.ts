@@ -7,7 +7,7 @@ export interface RecipeWizardStepConfig {
 }
 
 export const RECIPE_WIZARD_STEPS: RecipeWizardStepConfig[] = [
-  { step: 1, emoji: '🍺', title: 'Elaboración de la Receta' },
+  { step: 1, emoji: '🍺', title: 'Definición de la Receta' },
   { step: 2, emoji: '⚙️', title: 'Costeo de Producción' },
   { step: 3, emoji: '📦', title: 'Evaluación Comercial' },
   { step: 4, emoji: '💰', title: 'Rentabilidad' },

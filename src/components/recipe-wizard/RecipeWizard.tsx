@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Recipe, Currency } from '../../types';
+import { Recipe, Currency, SaveRecipeResult, RecipeUpdater } from '../../types';
 import { useRecipeWizardFinish } from '../../contexts/RecipeWizardFinishContext';
 import { RecipeWizardStep } from '../../constants/recipeWizardSteps';
 import { RecipeWizardStepIndicator } from './RecipeWizardStepIndicator';
@@ -10,8 +10,9 @@ import { RecipeStage4Rentabilidad } from './RecipeStage4Rentabilidad';
 
 interface RecipeWizardProps {
   recipe: Recipe;
-  onUpdateRecipe: (updated: Recipe) => void;
-  onSaveRecipe: (recipe: Recipe) => Promise<string | null>;
+  onUpdateRecipe: (update: RecipeUpdater) => void;
+  /** Persiste currentCostingRecipe en App; no recibe snapshot del wizard. */
+  onSaveRecipe: () => Promise<SaveRecipeResult>;
   currency: Currency;
   onCurrencyChange: (c: Currency) => void;
 }
@@ -41,33 +42,34 @@ export const RecipeWizard: React.FC<RecipeWizardProps> = ({
     setTimeout(() => setSavedToast(false), 3500);
   };
 
-  const persistRecipe = async (): Promise<boolean> => {
+  const persistRecipe = async (): Promise<Recipe | null> => {
     setSaveError(null);
     setSaving(true);
 
     try {
-      const error = await onSaveRecipe(recipe);
-      if (error) {
-        setSaveError(error);
+      // App lee currentCostingRecipe (única fuente de verdad), no el prop de este render.
+      const { error, recipe: persistedRecipe } = await onSaveRecipe();
+      if (error || !persistedRecipe) {
+        setSaveError(error ?? 'No se pudo guardar la receta. Intenta nuevamente.');
         setTimeout(() => setSaveError(null), 5000);
-        return false;
+        return null;
       }
-      return true;
+      return persistedRecipe;
     } finally {
       setSaving(false);
     }
   };
 
   const handleStage1SaveAndContinue = async () => {
-    const ok = await persistRecipe();
-    if (!ok) return;
+    const savedRecipe = await persistRecipe();
+    if (!savedRecipe) return;
     showSavedToast();
     setCurrentStep(2);
   };
 
   const handleStage2SaveAndContinue = async () => {
-    const ok = await persistRecipe();
-    if (!ok) return;
+    const savedRecipe = await persistRecipe();
+    if (!savedRecipe) return;
     showSavedToast();
     setCurrentStep(3);
   };
@@ -77,8 +79,8 @@ export const RecipeWizard: React.FC<RecipeWizardProps> = ({
   };
 
   const handleStage3SaveAndContinue = async () => {
-    const ok = await persistRecipe();
-    if (!ok) return;
+    const savedRecipe = await persistRecipe();
+    if (!savedRecipe) return;
     showSavedToast();
     setCurrentStep(4);
   };
@@ -88,10 +90,10 @@ export const RecipeWizard: React.FC<RecipeWizardProps> = ({
   };
 
   const handleStage4Finish = async () => {
-    const ok = await persistRecipe();
-    if (!ok) return;
+    const savedRecipe = await persistRecipe();
+    if (!savedRecipe) return;
     showSavedToast();
-    onRecipeFinished?.(recipe);
+    onRecipeFinished?.(savedRecipe);
   };
 
   const handleStage4Back = () => {

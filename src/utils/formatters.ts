@@ -1,5 +1,21 @@
-import { Currency, Recipe, IndirectCosts, PackagingFormatMl, PackagingType, PricingMode } from '../types';
+import { Currency, Recipe, IndirectCosts, PackagingFormatMl, PackagingType, PricingMode, AdjuntoUnit, IngredientItem } from '../types';
 import { CURRENCY_RATES } from '../data/mockData';
+
+export const ADJUNTO_UNIT_OPTIONS: AdjuntoUnit[] = ['g', 'kg', 'ml', 'L', 'unidad'];
+
+export const DEFAULT_ADJUNTO_UNIT: AdjuntoUnit = 'g';
+
+export function getAdjuntoUnit(item: IngredientItem): AdjuntoUnit {
+  return item.unit ?? 'kg';
+}
+
+export function formatAdjuntoQuantity(item: IngredientItem): string {
+  return `${item.quantityKg.toLocaleString('es-CL')} ${getAdjuntoUnit(item)}`;
+}
+
+export function calculateIngredientSubtotal(item: IngredientItem): number {
+  return item.quantityKg * item.pricePerKg;
+}
 
 export interface PackagingFormatOption {
   ml: PackagingFormatMl;
@@ -219,7 +235,7 @@ export const PRODUCTION_COST_FIELDS: { key: ProductionCostField; label: string }
 ];
 
 export function calculateIngredientsCost(recipe: Recipe): number {
-  return recipe.ingredients.reduce((acc, item) => acc + item.quantityKg * item.pricePerKg, 0);
+  return recipe.ingredients.reduce((acc, item) => acc + calculateIngredientSubtotal(item), 0);
 }
 
 export function calculateProductionCostsTotal(indirectCosts: IndirectCosts): number {
@@ -258,7 +274,7 @@ export interface BrewControlFinancials {
   productionCostPerUnit: number;
   /** Costo comercial por unidad: producción/unidad + envasado/unidad (Stage 3). */
   finalCostPerUnit: number;
-  /** Costo comercial del lote: producción + envasado total. */
+  /** Costo comercial de la receta: producción + envasado total. */
   totalCommercialCost: number;
   pricingMode: PricingMode;
   desiredMargin: number;
@@ -356,16 +372,71 @@ function formatTimeHHMM(date: Date): string {
   });
 }
 
+function looksLikeIsoTimestamp(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}T/.test(value.trim());
+}
+
+/** Parsea timestamps ISO/Supabase; normaliza fracciones de segundo extendidas de PostgreSQL. */
+function parseDateString(value: string): Date | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const direct = Date.parse(trimmed);
+  if (!Number.isNaN(direct)) {
+    return new Date(direct);
+  }
+
+  const normalized = trimmed.replace(
+    /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})\.(\d+)(Z|[+-]\d{2}:\d{2})$/,
+    (_, head: string, frac: string, tz: string) => `${head}.${frac.slice(0, 3)}${tz}`,
+  );
+  const parsed = Date.parse(normalized);
+  if (!Number.isNaN(parsed)) {
+    return new Date(parsed);
+  }
+
+  return null;
+}
+
+function formatLongDateES(date: Date): string {
+  return date.toLocaleDateString('es-CL', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+function formatUnparseableDateValue(value: string): string {
+  if (looksLikeIsoTimestamp(value)) return '—';
+  return value;
+}
+
+/** Fecha legible en español (hora local del navegador). Ej: 08 de julio de 2026 · 18:09 */
+export function formatRecipeDateDisplay(value: string, options?: { includeTime?: boolean }): string {
+  if (!value) return '—';
+
+  const date = parseDateString(value);
+  if (!date) {
+    return formatUnparseableDateValue(value);
+  }
+
+  const formatted = formatLongDateES(date);
+
+  if (options?.includeTime) {
+    return `${formatted} · ${formatTimeHHMM(date)}`;
+  }
+
+  return formatted;
+}
+
 /** Presentación amigable de lastModified; no altera el valor almacenado. */
 export function formatLastModifiedDisplay(value: string): string {
   if (!value) return '—';
 
-  const parsed = Date.parse(value);
-  if (Number.isNaN(parsed)) {
-    return value;
+  const date = parseDateString(value);
+  if (!date) {
+    return formatUnparseableDateValue(value);
   }
-
-  const date = new Date(parsed);
   const now = new Date();
   const yesterday = new Date(now);
   yesterday.setDate(yesterday.getDate() - 1);

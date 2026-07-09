@@ -27,6 +27,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
         alt={alt}
         draggable={false}
         className={className}
+        translate="no"
       />
     );
   }
@@ -38,6 +39,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
         alt={alt}
         draggable={false}
         className={className}
+        translate="no"
       />
     );
   }
@@ -50,6 +52,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
       aria-label={alt}
       className={`inline-flex items-center select-none ${className ?? ''}`}
       style={{ gap: BRAND_WORDMARK.gap }}
+      translate="no"
     >
       <img
         src={iconSrc}

@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Recipe } from '../../types';
-import { X, Plus, FlaskConical, Calendar, ArrowRight, Sparkles } from 'lucide-react';
+import { X, FlaskConical, ArrowRight, Sparkles } from 'lucide-react';
 
-interface NewBatchModalProps {
+interface NewRecipeEvaluationModalProps {
   isOpen: boolean;
   onClose: () => void;
   recipes: Recipe[];
-  onStartBatch: (newBatch: Recipe) => void;
+  onCreateEvaluation: (recipe: Recipe) => void;
 }
 
 const DEFAULT_BASE_RECIPE: Recipe = {
@@ -45,16 +45,16 @@ const DEFAULT_BASE_RECIPE: Recipe = {
   },
 };
 
-export const NewBatchModal: React.FC<NewBatchModalProps> = ({
+export const NewRecipeEvaluationModal: React.FC<NewRecipeEvaluationModalProps> = ({
   isOpen,
   onClose,
   recipes,
-  onStartBatch,
+  onCreateEvaluation,
 }) => {
   const availableRecipes = recipes && recipes.length > 0 ? recipes : [DEFAULT_BASE_RECIPE];
   const [selectedRecipeId, setSelectedRecipeId] = useState<string>(availableRecipes[0].id || '');
-  const [batchVolume, setBatchVolume] = useState<number>(500);
-  const [batchCode, setBatchCode] = useState<string>(`LOTE-${Math.floor(Math.random() * 899 + 100)}`);
+  const [volumeL, setVolumeL] = useState<number>(500);
+  const [recipeCode, setRecipeCode] = useState<string>(`REC-${Math.floor(Math.random() * 899 + 100)}`);
 
   if (!isOpen) return null;
 
@@ -63,11 +63,11 @@ export const NewBatchModal: React.FC<NewBatchModalProps> = ({
     const sourceRecipe = availableRecipes.find((r) => r.id === selectedRecipeId) || availableRecipes[0];
     if (!sourceRecipe) return;
 
-    const newBatch: Recipe = {
+    const newRecipe: Recipe = {
       ...sourceRecipe,
-      id: `batch-${Date.now()}`,
-      code: batchCode,
-      volumeL: batchVolume,
+      id: `recipe-${Date.now()}`,
+      code: recipeCode,
+      volumeL,
       status: 'EN PROGRESO',
       lastModified: 'Hoy, Recién iniciado',
       logEvents: [
@@ -75,7 +75,7 @@ export const NewBatchModal: React.FC<NewBatchModalProps> = ({
       ],
     };
 
-    onStartBatch(newBatch);
+    onCreateEvaluation(newRecipe);
     onClose();
   };
 
@@ -88,8 +88,8 @@ export const NewBatchModal: React.FC<NewBatchModalProps> = ({
               <FlaskConical className="w-5 h-5 stroke-[2.5]" />
             </div>
             <div>
-              <h2 className="text-lg font-bold">Iniciar Nuevo Lote Cervecería</h2>
-              <p className="text-xs text-[rgba(255,255,255,0.55)]">Abre una bitácora de cocción en planta</p>
+              <h2 className="text-lg font-bold">Nueva evaluación de receta</h2>
+              <p className="text-xs text-[rgba(255,255,255,0.55)]">Define volumen y costos para evaluar la receta</p>
             </div>
           </div>
           <button onClick={onClose} className="text-slate-300 hover:text-white p-1 rounded-2xl cursor-pointer">
@@ -115,22 +115,22 @@ export const NewBatchModal: React.FC<NewBatchModalProps> = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Volumen a Cocinar (Lts)</label>
+              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Litros objetivo</label>
               <input
                 type="number"
-                value={batchVolume}
-                onChange={(e) => setBatchVolume(Number(e.target.value))}
+                value={volumeL}
+                onChange={(e) => setVolumeL(Number(e.target.value))}
                 required
                 className="w-full bc-input px-4 py-2.5 text-sm font-mono font-bold text-[#0D1B2A]"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Código de Lote Interno</label>
+              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Código de receta</label>
               <input
                 type="text"
-                value={batchCode}
-                onChange={(e) => setBatchCode(e.target.value)}
+                value={recipeCode}
+                onChange={(e) => setRecipeCode(e.target.value)}
                 required
                 className="w-full bc-input px-4 py-2.5 text-sm font-mono font-bold text-[#0D1B2A]"
               />
@@ -140,7 +140,7 @@ export const NewBatchModal: React.FC<NewBatchModalProps> = ({
           <div className="bg-amber-50/70 border border-amber-200/80 p-4 rounded-xl flex items-start gap-3">
             <Sparkles className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
             <p className="text-xs text-amber-900 leading-normal">
-              Al confirmar, se iniciará el cálculo real de tu cerveza en el dashboard.
+              Al confirmar, se creará la evaluación y podrás ver el costeo en el dashboard.
             </p>
           </div>
 
@@ -156,7 +156,7 @@ export const NewBatchModal: React.FC<NewBatchModalProps> = ({
               type="submit"
               className="bg-[#F5A623] text-[#0D1B2A] hover:bg-[#FBB040] active:scale-95 transition-all px-6 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-2 bc-shadow cursor-pointer"
             >
-              <span>Cocinar Lote</span>
+              <span>Crear evaluación</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

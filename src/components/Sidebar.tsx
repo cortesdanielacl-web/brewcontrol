@@ -16,14 +16,14 @@ import { BrandLogo } from './BrandLogo';
 interface SidebarProps {
   activeTab: NavigationTab;
   onTabChange: (tab: NavigationTab) => void;
-  onNewBatchClick: () => void;
+  onNewRecipeClick: () => void;
   profile: BreweryProfile;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   onTabChange,
-  onNewBatchClick,
+  onNewRecipeClick,
   profile,
 }) => {
   const { isAdmin } = useAuth();
@@ -48,11 +48,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       <div className="mb-6">
         <button
-          onClick={onNewBatchClick}
+          onClick={onNewRecipeClick}
           className="w-full bg-bc-yellow text-bc-navy hover:bg-[#FBB040] active:scale-[0.98] transition-all duration-150 py-3 px-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 bc-shadow cursor-pointer"
         >
           <Plus className="w-4 h-4 stroke-[3]" />
-          Nuevo Lote
+          Nueva receta
         </button>
       </div>
 
@@ -72,7 +72,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <span className={isActive ? 'text-bc-yellow' : 'opacity-80'}>
                 {item.icon}
               </span>
-              <span>{item.label}</span>
+              <span translate={item.id === 'dashboard' ? 'no' : undefined}>{item.label}</span>
             </button>
           );
         })}
@@ -89,10 +89,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <span>Ayuda</span>
         </button>
 
-        <div 
+        <div
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onTabChange('configuracion');
+            }
+          }}
           onClick={() => onTabChange('configuracion')}
           className="mt-2 flex items-center gap-3 p-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer group"
-          title="Configurar Perfil"
+          title="Configurar perfil"
         >
           <div className="w-8 h-8 rounded-full bg-white/15 text-white flex items-center justify-center font-bold text-sm shrink-0 uppercase">
             {profile.masterBrewer.charAt(0)}

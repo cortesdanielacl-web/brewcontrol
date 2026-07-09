@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowLeft, Check, Loader2 } from 'lucide-react';
-import { Recipe, Currency, PricingMode } from '../../types';
+import { Recipe, Currency, PricingMode, RecipeUpdater } from '../../types';
 import { RecipeStage4SummarySection } from './RecipeStage4SummarySection';
 import { RecipePricingModeSection } from './RecipePricingModeSection';
 import { RecipeCommercialExpensesSection } from './RecipeCommercialExpensesSection';
@@ -9,7 +9,7 @@ import { RecipeProfitabilityResultsSection } from './RecipeProfitabilityResultsS
 interface RecipeStage4RentabilidadProps {
   recipe: Recipe;
   currency: Currency;
-  onUpdateRecipe: (updated: Recipe) => void;
+  onUpdateRecipe: (update: RecipeUpdater) => void;
   onBack: () => void;
   onFinish: () => Promise<void>;
   savedToast: boolean;
@@ -26,11 +26,11 @@ export const RecipeStage4Rentabilidad: React.FC<RecipeStage4RentabilidadProps> =
   saving,
 }) => {
   const updateIndirect = (patch: Partial<Recipe['indirectCosts']>) => {
-    onUpdateRecipe({
-      ...recipe,
-      indirectCosts: { ...recipe.indirectCosts, ...patch },
+    onUpdateRecipe((prev) => ({
+      ...prev,
+      indirectCosts: { ...prev.indirectCosts, ...patch },
       lastModified: 'Hace un momento',
-    });
+    }));
   };
 
   const handlePricingModeChange = (mode: PricingMode) => {
@@ -38,11 +38,11 @@ export const RecipeStage4Rentabilidad: React.FC<RecipeStage4RentabilidadProps> =
   };
 
   const handleDesiredMarginChange = (value: number) => {
-    onUpdateRecipe({
-      ...recipe,
+    onUpdateRecipe((prev) => ({
+      ...prev,
       desiredMargin: Number(value) >= 0 ? Number(value) : 0,
       lastModified: 'Hace un momento',
-    });
+    }));
   };
 
   const handleSalePriceChange = (value: number) => {

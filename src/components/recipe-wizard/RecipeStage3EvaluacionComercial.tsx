@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
-import { Recipe, Currency, PackagingFormatMl } from '../../types';
+import { Recipe, Currency, PackagingFormatMl, RecipeUpdater } from '../../types';
 import {
   PackagingCostField,
   getPackagingType,
@@ -13,7 +13,7 @@ import { RecipePackagingCostsSection } from './RecipePackagingCostsSection';
 interface RecipeStage3EvaluacionComercialProps {
   recipe: Recipe;
   currency: Currency;
-  onUpdateRecipe: (updated: Recipe) => void;
+  onUpdateRecipe: (update: RecipeUpdater) => void;
   onBack: () => void;
   onSaveAndContinue: () => Promise<void>;
   savedToast: boolean;
@@ -30,22 +30,22 @@ export const RecipeStage3EvaluacionComercial: React.FC<RecipeStage3EvaluacionCom
   saving,
 }) => {
   const handleFormatChange = (formatMl: PackagingFormatMl) => {
-    onUpdateRecipe({
-      ...recipe,
+    onUpdateRecipe((prev) => ({
+      ...prev,
       bottleSizeMl: formatMl,
       lastModified: 'Hace un momento',
-    });
+    }));
   };
 
   const handlePackagingCostChange = (field: PackagingCostField, value: number) => {
-    onUpdateRecipe({
-      ...recipe,
+    onUpdateRecipe((prev) => ({
+      ...prev,
       indirectCosts: {
-        ...recipe.indirectCosts,
+        ...prev.indirectCosts,
         [field]: Number(value) >= 0 ? Number(value) : 0,
       },
       lastModified: 'Hace un momento',
-    });
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

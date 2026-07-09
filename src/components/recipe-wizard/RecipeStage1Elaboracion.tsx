@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { ArrowRight, Check } from 'lucide-react';
-import { Recipe, IngredientCategory, IngredientItem } from '../../types';
-import { PREDEFINED_INGREDIENTS } from '../../data/mockData';
+import { Recipe, IngredientCategory, IngredientItem, RecipeUpdater } from '../../types';
 import { RecipeInfoSection } from './RecipeInfoSection';
 import { RecipeParametersSection } from './RecipeParametersSection';
 import { RecipeIngredientsSection } from './RecipeIngredientsSection';
 
 interface RecipeStage1ElaboracionProps {
   recipe: Recipe;
-  onUpdateRecipe: (updated: Recipe) => void;
+  onUpdateRecipe: (update: RecipeUpdater) => void;
   onSaveAndContinue: () => Promise<void>;
   savedToast: boolean;
   saving: boolean;
@@ -24,42 +23,43 @@ export const RecipeStage1Elaboracion: React.FC<RecipeStage1ElaboracionProps> = (
   const [activeTab, setActiveTab] = useState<IngredientCategory>('maltas');
 
   const handleGeneralChange = (field: keyof Recipe, value: string | number) => {
-    onUpdateRecipe({ ...recipe, [field]: value, lastModified: 'Hace un momento' });
+    onUpdateRecipe((prev) => ({ ...prev, [field]: value, lastModified: 'Hace un momento' }));
   };
 
   const handleIngredientChange = (id: string, field: keyof IngredientItem, value: string | number) => {
-    const nextIngs = recipe.ingredients.map((item) => {
-      if (item.id === id) {
-        return { ...item, [field]: field === 'name' ? value : Number(value) || 0 };
-      }
-      return item;
-    });
-    onUpdateRecipe({ ...recipe, ingredients: nextIngs, lastModified: 'Hace un momento' });
+    onUpdateRecipe((prev) => ({
+      ...prev,
+      ingredients: prev.ingredients.map((item) => {
+        if (item.id === id) {
+          return { ...item, [field]: field === 'name' ? value : Number(value) || 0 };
+        }
+        return item;
+      }),
+      lastModified: 'Hace un momento',
+    }));
   };
 
   const handleIngredientDelete = (id: string) => {
-    onUpdateRecipe({
-      ...recipe,
-      ingredients: recipe.ingredients.filter((item) => item.id !== id),
+    onUpdateRecipe((prev) => ({
+      ...prev,
+      ingredients: prev.ingredients.filter((item) => item.id !== id),
       lastModified: 'Hace un momento',
-    });
+    }));
   };
 
   const handleAddIngredient = () => {
-    const predefined = PREDEFINED_INGREDIENTS[activeTab] || [];
-    const firstOption = predefined[0] || { name: 'Nuevo ingrediente', pricePerKg: 0 };
     const newItem: IngredientItem = {
       id: `ing-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      name: activeTab !== 'adjuntos' ? '' : firstOption.name,
+      name: '',
       category: activeTab,
       quantityKg: activeTab === 'maltas' ? 25 : activeTab === 'lupulos' ? 1 : 0.5,
       pricePerKg: 0,
     };
-    onUpdateRecipe({
-      ...recipe,
-      ingredients: [...recipe.ingredients, newItem],
+    onUpdateRecipe((prev) => ({
+      ...prev,
+      ingredients: [...prev.ingredients, newItem],
       lastModified: 'Hace un momento',
-    });
+    }));
   };
 
   const currentTabIngredients = recipe.ingredients.filter((i) => i.category === activeTab);
@@ -79,7 +79,7 @@ export const RecipeStage1Elaboracion: React.FC<RecipeStage1ElaboracionProps> = (
           </div>
           <div>
             <p className="text-xs font-bold">Receta guardada</p>
-            <p className="text-[11px] text-slate-300">Elaboración técnica registrada en tu catálogo</p>
+            <p className="text-[11px] text-slate-300">Receta guardada en tu catálogo</p>
           </div>
         </div>
       )}

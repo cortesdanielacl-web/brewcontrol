@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Recipe, Currency } from '../types';
+import { Recipe, Currency, SaveRecipeResult, RecipeUpdater } from '../types';
 import { RecipeWizardFinishContext } from '../contexts/RecipeWizardFinishContext';
 import { RecipeWizard } from './recipe-wizard/RecipeWizard';
 import { RecipeTechnicalSheetView } from './recipe-wizard/RecipeTechnicalSheetView';
@@ -7,8 +7,8 @@ import { RecipeTechnicalSheetView } from './recipe-wizard/RecipeTechnicalSheetVi
 interface CostingViewProps {
   sessionKey: number;
   recipe: Recipe;
-  onUpdateRecipe: (updated: Recipe) => void;
-  onSaveRecipe: (recipe: Recipe) => Promise<string | null>;
+  onUpdateRecipe: (update: RecipeUpdater) => void;
+  onSaveRecipe: () => Promise<SaveRecipeResult>;
   currency: Currency;
   onCurrencyChange: (c: Currency) => void;
   onExportExcel: () => void;

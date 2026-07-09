@@ -1,5 +1,6 @@
 import React from 'react';
-import { HelpCircle, BookOpen, Calculator, Droplet, Flame, Percent, ArrowRight } from 'lucide-react';
+import { HelpCircle, BookOpen, Calculator, Droplet, Flame, Percent } from 'lucide-react';
+import { COMING_SOON_TOOLTIP } from '../constants/ux';
 
 export const HelpView: React.FC = () => {
   const formulas = [
@@ -11,7 +12,7 @@ export const HelpView: React.FC = () => {
     },
     {
       title: 'Costo por Botella / Lata',
-      formula: 'Costo Botella = (Costo Total Lote / Volumen Lts) × (Capacidad Envase ml / 1000)',
+      formula: 'Costo Botella = (Costo Total Receta / Volumen Lts) × (Capacidad Envase ml / 1000)',
       desc: 'Permite distribuir los gastos fijos e indirectos proporcionalmente según el formato comercial (Ej: 330ml).',
       icon: <Droplet className="w-5 h-5 text-bc-action" />
     },
@@ -24,7 +25,7 @@ export const HelpView: React.FC = () => {
     {
       title: 'Prorrateo de Gastos Indirectos',
       formula: 'Gasto por Litro = (Agua + Gas + Arriendo + Luz + Mano de Obra) / Cocción Total Lts',
-      desc: 'Asignación directa de costos de servicios públicos y remuneraciones operacionales por cada batch.',
+      desc: 'Asignación directa de costos de servicios públicos y remuneraciones operacionales por cada receta evaluada.',
       icon: <Flame className="w-5 h-5 text-red-600" />
     }
   ];
@@ -33,7 +34,10 @@ export const HelpView: React.FC = () => {
     <div className="max-w-[1000px] mx-auto p-4 md:p-8 flex flex-col gap-8 animate-in fade-in duration-200 select-none pb-16">
       <div>
         <h1 className="text-4xl md:text-5xl font-black tracking-tight text-[#0D1B2A]">Ayuda y Fórmulas</h1>
-        <p className="text-base text-[#475569] mt-1.5">Documentación técnica de los modelos matemáticos y financieros de BrewControl.</p>
+        <p className="text-base text-[#475569] mt-1.5">
+          Documentación técnica de los modelos matemáticos y financieros de{' '}
+          <span translate="no">BrewControl</span>.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -44,9 +48,14 @@ export const HelpView: React.FC = () => {
                 <div className="p-2.5 bg-slate-50 rounded-xl">
                   {item.icon}
                 </div>
-                <h3 className="text-lg font-bold text-[#0D1B2A]">{item.title}</h3>
+                <h3 className="text-lg font-bold text-[#0D1B2A]" translate={item.title.includes('ABV') ? 'no' : undefined}>
+                  {item.title}
+                </h3>
               </div>
-              <div className="bc-input p-3.5 font-mono text-xs font-bold text-[#0D1B2A] my-2 select-text">
+              <div
+                className="bc-input p-3.5 font-mono text-xs font-bold text-[#0D1B2A] my-2 select-text"
+                translate={item.formula.includes('ABV') ? 'no' : undefined}
+              >
                 {item.formula}
               </div>
               <p className="text-xs text-slate-600 leading-relaxed mt-2">
@@ -67,15 +76,18 @@ export const HelpView: React.FC = () => {
         <div className="relative z-10">
           <h2 className="text-2xl font-bold text-white mb-2">¿Necesitas importar masivamente tu inventario?</h2>
           <p className="text-sm text-slate-300 max-w-xl leading-relaxed">
-            Puedes conectar tu sistema ERP o planillas Excel en la sección de Configuración para sincronizar los precios por kilogramo de lúpulos y maltas automáticamente.
+            La sincronización con planillas Excel o sistemas ERP estará disponible en una próxima versión de{' '}
+            <span translate="no">BrewControl</span>.
           </p>
         </div>
-        <button 
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="bg-[#F5A623] text-[#0D1B2A] hover:bg-[#FBB040] active:scale-95 transition-all px-6 py-3 rounded-xl font-bold text-sm shrink-0 flex items-center gap-2 cursor-pointer relative z-10"
+        <button
+          type="button"
+          disabled
+          aria-disabled="true"
+          title={COMING_SOON_TOOLTIP}
+          className="bg-slate-600 text-slate-300 font-bold text-sm px-6 py-3 rounded-xl shrink-0 cursor-not-allowed relative z-10"
         >
-          <span>Volver al inicio</span>
-          <ArrowRight className="w-4 h-4" />
+          Importación masiva
         </button>
       </section>
     </div>

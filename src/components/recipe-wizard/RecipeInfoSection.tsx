@@ -35,6 +35,7 @@ export const RecipeInfoSection: React.FC<RecipeInfoSectionProps> = ({ recipe, on
             onChange={(e) => onChange('style', e.target.value)}
             placeholder="Ej: American IPA, Stout..."
             className="w-full bc-input px-3.5 py-2.5 text-sm text-[#0D1B2A] font-medium focus:border-bc-action focus:ring-1 focus:ring-bc-action/20 outline-none transition-all"
+            translate="no"
           />
         </div>
 
