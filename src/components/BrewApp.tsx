@@ -491,7 +491,9 @@ export default function BrewApp() {
             />
           )}
 
-          {isAdmin && isAdminTab(activeTab) && <AdminView section={activeTab} />}
+          {isAdmin && isAdminTab(activeTab) && (
+            <AdminView section={activeTab} onNavigate={setActiveTab} />
+          )}
 
           {activeTab === 'ayuda' && <HelpView />}
         </main>

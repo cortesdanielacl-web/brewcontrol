@@ -1,26 +1,28 @@
 import React from 'react';
-import type { AdminNavigationTab } from '../types';
+import type { AdminNavigationTab, NavigationTab } from '../types';
 import { AdminCerveceriasView } from './admin/AdminCerveceriasView';
+import { AdminDashboardView } from './admin/AdminDashboardView';
 
 interface AdminViewProps {
   section: AdminNavigationTab;
+  onNavigate: (tab: NavigationTab) => void;
 }
 
 const SECTION_COPY: Record<
-  Exclude<AdminNavigationTab, 'admin-cervecerias'>,
+  Exclude<AdminNavigationTab, 'admin-cervecerias' | 'admin-dashboard'>,
   { title: string; description: string }
 > = {
-  'admin-dashboard': {
-    title: 'Dashboard Admin',
-    description: 'Vista general de la plataforma — disponible próximamente.',
-  },
   'admin-recetas': {
     title: 'Recetas',
     description: 'Supervisión de recetas a nivel plataforma — disponible próximamente.',
   },
 };
 
-export const AdminView: React.FC<AdminViewProps> = ({ section }) => {
+export const AdminView: React.FC<AdminViewProps> = ({ section, onNavigate }) => {
+  if (section === 'admin-dashboard') {
+    return <AdminDashboardView onNavigate={onNavigate} />;
+  }
+
   if (section === 'admin-cervecerias') {
     return <AdminCerveceriasView />;
   }
