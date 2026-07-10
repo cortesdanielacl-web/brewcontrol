@@ -122,7 +122,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ mode = 'login' }) => {
                       type="text"
                       value={breweryName}
                       onChange={(e) => setBreweryName(e.target.value)}
-                      placeholder="Ej. Cervecería Valdiviana"
+                      placeholder=""
                       className="w-full bc-input pl-10 pr-4 py-3 text-sm text-slate-900 font-medium outline-none focus:border-bc-action focus:bg-white transition-colors"
                     />
                   </div>
@@ -138,7 +138,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ mode = 'login' }) => {
                       type="text"
                       value={masterBrewer}
                       onChange={(e) => setMasterBrewer(e.target.value)}
-                      placeholder="Ej. Daniela Cortés"
+                      placeholder=""
                       className="w-full bc-input pl-10 pr-4 py-3 text-sm text-slate-900 font-medium outline-none focus:border-bc-action focus:bg-white transition-colors"
                     />
                   </div>
@@ -156,7 +156,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ mode = 'login' }) => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="usuario@cerveceria.cl"
+                  placeholder=""
                   autoComplete="email"
                   className="w-full bc-input pl-10 pr-4 py-3 text-sm text-slate-900 font-medium outline-none focus:border-bc-action focus:bg-white transition-colors"
                 />
@@ -173,7 +173,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ mode = 'login' }) => {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder=""
                   autoComplete={isRegistering ? 'new-password' : 'current-password'}
                   className="w-full bc-input pl-10 pr-4 py-3 text-sm text-slate-900 font-medium outline-none focus:border-bc-action focus:bg-white transition-colors"
                 />
@@ -203,7 +203,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ mode = 'login' }) => {
                 </>
               ) : (
                 <>
-                  <span>{isRegistering ? 'Registrarse y Entrar' : 'Ingresar'}</span>
+                  <span>{isRegistering ? 'Crear cuenta' : 'Ingresar'}</span>
                   <ArrowRight className="w-4 h-4 text-[#F5A623]" />
                 </>
               )}

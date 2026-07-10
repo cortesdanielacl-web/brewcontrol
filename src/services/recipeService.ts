@@ -85,6 +85,11 @@ function mapRowToRecipeFromDb(row: RecipeRow): Recipe {
   return mapRowToRecipe(row, { ...DEFAULT_BLANK_RECIPE });
 }
 
+/** Mapeo compartido para lecturas admin (RPC) sin duplicar la lógica de columnas. */
+export function mapDbRecipeRow(row: unknown): Recipe {
+  return mapRowToRecipeFromDb(row as RecipeRow);
+}
+
 async function requireAuthenticatedUser(): Promise<User> {
   const {
     data: { user },

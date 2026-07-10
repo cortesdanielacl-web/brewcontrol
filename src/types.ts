@@ -1,4 +1,18 @@
-export type NavigationTab = 'dashboard' | 'costeo' | 'recetas' | 'historial' | 'administracion' | 'configuracion' | 'ayuda';
+export type NavigationTab =
+  | 'dashboard'
+  | 'costeo'
+  | 'recetas'
+  | 'historial'
+  | 'admin-dashboard'
+  | 'admin-cervecerias'
+  | 'admin-recetas'
+  | 'configuracion'
+  | 'ayuda';
+
+export type AdminNavigationTab = Extract<
+  NavigationTab,
+  'admin-dashboard' | 'admin-cervecerias' | 'admin-recetas'
+>;
 
 export type Currency = 'CLP' | 'USD' | 'EUR';
 
@@ -107,6 +121,12 @@ export interface BreweryProfile {
 
 export type UserRole = 'admin' | 'user';
 
+/** Estado de cuenta (mapeado desde profiles.active). */
+export type AccountStatus = 'active' | 'inactive';
+
+/** Plan del Programa Fundadores / producto. */
+export type AccountPlan = 'beta' | 'fundador' | 'pro';
+
 /** Fila de public.profiles (1:1 con auth.users). */
 export interface UserProfile {
   id: string;
@@ -114,7 +134,21 @@ export interface UserProfile {
   master_brewer: string | null;
   role: UserRole;
   active: boolean;
+  plan: AccountPlan;
   created_at: string;
+}
+
+/** Fila del listado admin de cervecerías (RPC admin_list_breweries). */
+export interface AdminBreweryListItem {
+  id: string;
+  breweryName: string | null;
+  masterBrewer: string | null;
+  email: string | null;
+  role: UserRole;
+  active: boolean;
+  plan: AccountPlan;
+  createdAt: string;
+  recipeCount: number;
 }
 
 export interface NotificationItem {

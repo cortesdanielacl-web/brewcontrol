@@ -1,15 +1,16 @@
 import React from 'react';
-import { NavigationTab, BreweryProfile } from '../types';
+import { NavigationTab, BreweryProfile, AdminNavigationTab } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { 
-  LayoutDashboard, 
-  LineChart, 
-  BookOpen, 
-  History, 
-  Settings, 
-  HelpCircle, 
+import {
+  LayoutDashboard,
+  LineChart,
+  BookOpen,
+  History,
+  Settings,
+  HelpCircle,
   Plus,
   Shield,
+  Building2,
 } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
 
@@ -19,6 +20,14 @@ interface SidebarProps {
   onNewRecipeClick: () => void;
   profile: BreweryProfile;
 }
+
+const ADMIN_NAV_ITEMS: { id: AdminNavigationTab; label: string; icon: React.ReactNode }[] = [
+  { id: 'admin-dashboard', label: 'Dashboard Admin', icon: <LayoutDashboard className="w-5 h-5" /> },
+  { id: 'admin-cervecerias', label: 'Cervecerías', icon: <Building2 className="w-5 h-5" /> },
+  { id: 'admin-recetas', label: 'Recetas', icon: <BookOpen className="w-5 h-5" /> },
+];
+
+export { ADMIN_NAV_ITEMS };
 
 export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
@@ -33,11 +42,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'costeo', label: 'Nueva Evaluación de Receta', icon: <LineChart className="w-5 h-5" /> },
     { id: 'recetas', label: 'Mis Recetas', icon: <BookOpen className="w-5 h-5" /> },
     { id: 'historial', label: 'Historial', icon: <History className="w-5 h-5" /> },
-    ...(isAdmin
-      ? [{ id: 'administracion' as NavigationTab, label: 'Administración', icon: <Shield className="w-5 h-5" /> }]
-      : []),
     { id: 'configuracion', label: 'Configuración', icon: <Settings className="w-5 h-5" /> },
   ];
+
+  const renderNavButton = (item: { id: NavigationTab; label: string; icon: React.ReactNode }) => {
+    const isActive = activeTab === item.id;
+    return (
+      <button
+        key={item.id}
+        onClick={() => onTabChange(item.id)}
+        className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-150 text-left cursor-pointer ${
+          isActive
+            ? 'bg-white/10 text-bc-yellow shadow-inner border-l-4 border-bc-yellow pl-2.5'
+            : 'text-white/55 hover:bg-white/10 hover:text-white'
+        }`}
+      >
+        <span className={isActive ? 'text-bc-yellow' : 'opacity-80'}>{item.icon}</span>
+        <span translate={item.id === 'dashboard' || item.id === 'admin-dashboard' ? 'no' : undefined}>
+          {item.label}
+        </span>
+      </button>
+    );
+  };
 
   return (
     <aside className="bc-sidebar hidden md:flex flex-col h-full w-[280px] fixed left-0 top-0 text-white z-40 py-6 px-6 shrink-0 transition-all duration-300 select-none">
@@ -57,25 +83,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       <nav className="flex-1 flex flex-col gap-1.5">
-        {navItems.map((item) => {
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => onTabChange(item.id)}
-              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-150 text-left cursor-pointer ${
-                isActive
-                  ? 'bg-white/10 text-bc-yellow shadow-inner border-l-4 border-bc-yellow pl-2.5'
-                  : 'text-white/55 hover:bg-white/10 hover:text-white'
-              }`}
-            >
-              <span className={isActive ? 'text-bc-yellow' : 'opacity-80'}>
-                {item.icon}
-              </span>
-              <span translate={item.id === 'dashboard' ? 'no' : undefined}>{item.label}</span>
-            </button>
-          );
-        })}
+        {navItems.map(renderNavButton)}
+
+        {isAdmin && (
+          <div className="mt-4 pt-4 border-t border-white/10 flex flex-col gap-1.5">
+            <div className="flex items-center gap-2 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-white/40">
+              <Shield className="w-3.5 h-3.5" />
+              <span>Administración</span>
+            </div>
+            {ADMIN_NAV_ITEMS.map(renderNavButton)}
+          </div>
+        )}
       </nav>
 
       <div className="mt-auto pt-4 border-t border-white/10 flex flex-col gap-3">

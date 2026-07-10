@@ -17,10 +17,15 @@ import {
   type SignUpMetadata,
 } from '../services/authService';
 import { getProfileByUserId } from '../services/profileService';
-import type { UserProfile, UserRole } from '../types';
+import type { AccountPlan, UserProfile, UserRole } from '../types';
 
 function parseUserRole(role: string | null | undefined): UserRole {
   return role === 'admin' ? 'admin' : 'user';
+}
+
+function parseAccountPlan(plan: string | null | undefined): AccountPlan {
+  if (plan === 'fundador' || plan === 'pro') return plan;
+  return 'beta';
 }
 
 interface AuthContextValue {
@@ -41,13 +46,30 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function normalizeProfile(fetchedProfile: UserProfile): UserProfile {
+  return {
+    ...fetchedProfile,
+    role: parseUserRole(fetchedProfile.role),
+    plan: parseAccountPlan(fetchedProfile.plan),
+  };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [role, setRole] = useState<UserRole | null>(null);
+  /** userId para el que ya terminó la carga de perfil (éxito o error). null = sin resolver / sin sesión. */
+  const [resolvedUserId, setResolvedUserId] = useState<string | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
 
-  const loading = !sessionChecked || (!!session?.user && role === null);
+  const userId = session?.user?.id ?? null;
+  const profileReady = !userId || resolvedUserId === userId;
+  const role: UserRole | null = !userId
+    ? null
+    : profileReady
+      ? (profile?.role ?? 'user')
+      : null;
+  const isAdmin = role === 'admin';
+  const loading = !sessionChecked || !profileReady;
 
   useEffect(() => {
     let mounted = true;
@@ -75,16 +97,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const userId = session?.user?.id;
-
     if (!userId) {
       setProfile(null);
-      setRole(null);
+      setResolvedUserId(null);
       return;
     }
 
     setProfile(null);
-    setRole(null);
+    setResolvedUserId(null);
 
     let mounted = true;
 
@@ -95,24 +115,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (error) {
           console.error('Error al cargar el perfil del usuario:', error);
           setProfile(null);
-          setRole('user');
+          setResolvedUserId(userId);
           return;
         }
 
-        setProfile(fetchedProfile);
-        setRole(parseUserRole(fetchedProfile?.role));
+        setProfile(fetchedProfile ? normalizeProfile(fetchedProfile) : null);
+        setResolvedUserId(userId);
       })
       .catch((error) => {
         if (!mounted) return;
         console.error('Error al cargar el perfil del usuario:', error);
         setProfile(null);
-        setRole('user');
+        setResolvedUserId(userId);
       });
 
     return () => {
       mounted = false;
     };
-  }, [session?.user?.id]);
+  }, [userId]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await signInWithEmail(email, password);
@@ -131,8 +151,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await authSignOut();
     return { error };
   }, []);
-
-  const isAdmin = role === 'admin';
 
   const value = useMemo<AuthContextValue>(
     () => ({

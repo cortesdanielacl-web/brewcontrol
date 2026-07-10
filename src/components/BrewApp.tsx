@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import {
   NavigationTab,
+  AdminNavigationTab,
   Currency,
   Recipe,
   BreweryProfile,
@@ -12,7 +13,7 @@ import { INITIAL_PROFILE, INITIAL_NOTIFICATIONS, DEFAULT_BLANK_RECIPE } from '..
 import { createRecipe, deleteRecipe, getRecipes, isPersistedRecipeId, updateRecipe } from '../services/recipeService';
 import { getProfileByUserId, updateProfile } from '../services/profileService';
 import { useAuth } from '../contexts/AuthContext';
-import { Sidebar } from './Sidebar';
+import { Sidebar, ADMIN_NAV_ITEMS } from './Sidebar';
 import { Topbar } from './Topbar';
 import { DashboardView } from './DashboardView';
 import { CostingView } from './CostingView';
@@ -25,6 +26,10 @@ import { NewRecipeEvaluationModal } from './modals/NewRecipeEvaluationModal';
 import { NewRecipeModal } from './modals/NewRecipeModal';
 import { LayoutDashboard, LineChart, BookOpen, History, Settings, HelpCircle, Plus, X, Shield } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
+
+function isAdminTab(tab: NavigationTab): tab is AdminNavigationTab {
+  return tab === 'admin-dashboard' || tab === 'admin-cervecerias' || tab === 'admin-recetas';
+}
 
 function upsertRecipeInList(prev: Recipe[], savedRecipe: Recipe, recipeToStore: Recipe): Recipe[] {
   const byOldId = prev.findIndex((r) => r.id === savedRecipe.id);
@@ -67,6 +72,12 @@ export default function BrewApp() {
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
   const [currency, setCurrency] = useState<Currency>('CLP');
   const [recipes, setRecipes] = useState<Recipe[]>([]);
+
+  useEffect(() => {
+    if (!isAdmin && isAdminTab(activeTab)) {
+      setActiveTab('dashboard');
+    }
+  }, [isAdmin, activeTab]);
 
   useEffect(() => {
     if (!user) return;
@@ -337,9 +348,6 @@ export default function BrewApp() {
                   { id: 'costeo', label: 'Nueva Evaluación de Receta', icon: <LineChart className="w-5 h-5" /> },
                   { id: 'recetas', label: 'Mis Recetas', icon: <BookOpen className="w-5 h-5" /> },
                   { id: 'historial', label: 'Historial', icon: <History className="w-5 h-5" /> },
-                  ...(isAdmin
-                    ? [{ id: 'administracion', label: 'Administración', icon: <Shield className="w-5 h-5" /> }]
-                    : []),
                   { id: 'configuracion', label: 'Configuración', icon: <Settings className="w-5 h-5" /> },
                 ].map((item) => (
                   <button
@@ -356,6 +364,30 @@ export default function BrewApp() {
                     <span translate={item.id === 'dashboard' ? 'no' : undefined}>{item.label}</span>
                   </button>
                 ))}
+
+                {isAdmin && (
+                  <div className="mt-3 pt-3 border-t border-white/10 flex flex-col gap-2">
+                    <div className="flex items-center gap-2 px-4 py-1 text-[11px] font-semibold uppercase tracking-widest text-white/40">
+                      <Shield className="w-3.5 h-3.5" />
+                      <span>Administración</span>
+                    </div>
+                    {ADMIN_NAV_ITEMS.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          setActiveTab(item.id);
+                          setMobileMenuOpen(false);
+                        }}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-colors text-left ${
+                          activeTab === item.id ? 'bg-white/15 text-[#F5A623]' : 'text-[rgba(255,255,255,0.55)] hover:bg-white/10'
+                        }`}
+                      >
+                        {item.icon}
+                        <span translate={item.id === 'admin-dashboard' ? 'no' : undefined}>{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </nav>
             </div>
 
@@ -459,7 +491,7 @@ export default function BrewApp() {
             />
           )}
 
-          {activeTab === 'administracion' && isAdmin && <AdminView />}
+          {isAdmin && isAdminTab(activeTab) && <AdminView section={activeTab} />}
 
           {activeTab === 'ayuda' && <HelpView />}
         </main>

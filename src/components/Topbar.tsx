@@ -50,7 +50,9 @@ export const Topbar: React.FC<TopbarProps> = ({
       case 'recetas': return 'Mis Recetas';
       case 'historial': return 'Historial de Evaluaciones de Receta';
       case 'configuracion': return 'Configuración de Cervecería';
-      case 'administracion': return 'Administración';
+      case 'admin-dashboard': return 'Dashboard Admin';
+      case 'admin-cervecerias': return 'Cervecerías';
+      case 'admin-recetas': return 'Recetas (Admin)';
       case 'ayuda': return 'Centro de Ayuda y Fórmulas';
       default: return 'BrewControl';
     }

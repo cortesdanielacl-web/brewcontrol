@@ -46,6 +46,7 @@ export async function createProfile(
       master_brewer: input.masterBrewer,
       role: 'user',
       active: true,
+      plan: 'beta',
     })
     .select()
     .single();
